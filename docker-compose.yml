@@ -1,0 +1,16 @@
+version: '2'
+
+services:
+  nextcloud:
+    container_name: ${DOCKER_CONTAINER_NAME}
+    image: nextcloud
+    restart: always
+    ports:
+      - ${DOCKER_PORT}:80
+    volumes:
+      - ./files:/var/www/html
+    environment:
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+      - MYSQL_DATABASE=${MYSQL_DATABASE}
+      - MYSQL_USER=${MYSQL_USER}
+      - MYSQL_HOST=${MYSQL_HOST}
