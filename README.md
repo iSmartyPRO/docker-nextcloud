@@ -22,3 +22,24 @@ docker-compose down
 
 ## Дополнение
 После установки, необходимо создать пользователя с правами администратора и далее донастроить под нужды компании.
+
+## Включение поддержки SMB
+для того чтобы включить поддержку SMB необходимо установить клиент:
+
+```
+docker exec -ti nextcloud bash
+apt update
+apt install smbclient
+```
+
+## Решение проблемы - не авторизуется сразу - приходиться вводить данные авторизации, потом обновлять страницу
+в консоле выдается ошибка: because it violates the following Content Security Policy directive: "form-action 'self'"
+
+Решение - дополнить конфиг:
+```
+vim files/config/config.php
+```
+добавить:
+```
+'overwriteprotocol' => 'https',
+```
