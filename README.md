@@ -43,3 +43,15 @@ vim files/config/config.php
 ```
 'overwriteprotocol' => 'https',
 ```
+
+# Выполнение команд через консоль
+
+## Отобразить список всех команд
+```
+docker exec -u 33 nextcloud php occ list
+```
+
+## Отобразить настройки LDAP
+```
+docker exec -u 33 nextcloud php occ ldap:show-config
+```
