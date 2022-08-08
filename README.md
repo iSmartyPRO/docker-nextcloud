@@ -20,6 +20,14 @@ docker-compose up -d
 docker-compose down
 ```
 
+## Создание базы данных MySQL для NextCloud
+```
+CREATE DATABASE nextcloud CHARACTER SET utf8 COLLATE utf8_bin;
+CREATE USER 'nextcloud'@'%' IDENTIFIED BY 'SuperPassword!';
+GRANT ALL PRIVILEGES ON nextcloud.* TO 'nextcloud'@'%';
+FLUSH PRIVILEGES;
+```
+
 ## Дополнение
 После установки, необходимо создать пользователя с правами администратора и далее донастроить под нужды компании.
 
