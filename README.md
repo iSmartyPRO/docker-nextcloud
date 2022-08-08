@@ -45,7 +45,7 @@ apt install smbclient
 
 Решение - дополнить конфиг:
 ```
-vim files/config/config.php
+vim config/config.php
 ```
 добавить:
 ```
