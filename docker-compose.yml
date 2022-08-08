@@ -14,3 +14,8 @@ services:
       - MYSQL_DATABASE=${MYSQL_DATABASE}
       - MYSQL_USER=${MYSQL_USER}
       - MYSQL_HOST=${MYSQL_HOST}
+
+networks:
+  default:
+    external:
+      name: "docker-lan"
