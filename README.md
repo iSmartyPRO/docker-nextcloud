@@ -28,6 +28,55 @@ GRANT ALL PRIVILEGES ON nextcloud.* TO 'nextcloud'@'%';
 FLUSH PRIVILEGES;
 ```
 
+## Конфигурация для Nginx сервера
+```
+server {
+    server_name cloud.example.com;
+
+    location / {
+        proxy_pass http://nextcloud/;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+
+        add_header Strict-Transport-Security "max-age=31536000; includeSubDomains; preload";
+        client_max_body_size 0;
+
+        access_log /var/log/nginx/cloud.example.com.access.log;
+        error_log /var/log/nginx/cloud.example.com.error.log;
+    }
+
+    location /.well-known/carddav {
+      return 301 $scheme://$host/remote.php/dav;
+    }
+
+    location /.well-known/caldav {
+      return 301 $scheme://$host/remote.php/dav;
+    }
+    location /.well-known/acme-challenge/ {
+        root /var/www/certbot;
+    }
+
+    listen [::]:443 ssl http2; # managed by Certbot
+    listen 443 ssl http2; # managed by Certbot
+    ssl_certificate /etc/nginx/conf.d/ssl/cloud.example.com.crt;
+    ssl_certificate_key /etc/nginx/conf.d/ssl/cloud.example.com.key;
+}
+
+server {
+    if ($host = cloud.example.com) {
+        return 301 https://$host$request_uri;
+    } # managed by Certbot
+
+        listen 80;
+        listen [::]:80;
+
+        server_name cloud.example.com;
+    return 404; # managed by Certbot
+}
+```
+
 ## Дополнение
 После установки, необходимо создать пользователя с правами администратора и далее донастроить под нужды компании.
 
