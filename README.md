@@ -89,6 +89,17 @@ apt update
 apt install smbclient
 ```
 
+### в более свежих версиях нужно дополнительно настраивать
+Оригинал статьи: https://www.reddit.com/r/NextCloud/comments/k0pmpv/how_do_i_get_smbclient_installed_in_my_docker/
+
+Команды для докер контейнера:
+```
+apt install smbclient libsmbclient-dev
+pecl install smbclient
+docker-php-ext-enable smbclient
+```
+после чего контрольно перезагрузить контейнер.
+
 ## Решение проблемы - не авторизуется сразу - приходиться вводить данные авторизации, потом обновлять страницу
 в консоле выдается ошибка: because it violates the following Content Security Policy directive: "form-action 'self'"
 
