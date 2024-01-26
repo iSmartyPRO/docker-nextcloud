@@ -14,6 +14,13 @@ services:
       - MYSQL_DATABASE=${MYSQL_DATABASE}
       - MYSQL_USER=${MYSQL_USER}
       - MYSQL_HOST=${MYSQL_HOST}
+      - REDIS_HOST=${DOCKER_CONTAINER_NAME}_redist
+  redis:
+    container_name: ${DOCKER_CONTAINER_NAME}_redist 
+    expose:
+      - 6379
+    image: redis:alpine
+    restart: always
 
 networks:
   default:
