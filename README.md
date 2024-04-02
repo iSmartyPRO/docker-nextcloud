@@ -15,6 +15,7 @@
 docker-compose up -d
 ```
 
+
 ## Удаление
 ```
 docker-compose down
@@ -122,4 +123,18 @@ docker exec -u 33 nextcloud php occ list
 ## Отобразить настройки LDAP
 ```
 docker exec -u 33 nextcloud php occ ldap:show-config
+```
+
+### Отключения не нужных программ
+был создан специальный скрипт, который отключает программы, которые не нужны.
+
+```
+./apps-disable.sh
+```
+
+### Background jobs
+По рекомендации необходимо установить нужны параметр.
+
+```
+./background-job.sh
 ```
