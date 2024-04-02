@@ -3,7 +3,7 @@ version: '2'
 services:
   nextcloud:
     container_name: ${DOCKER_CONTAINER_NAME}
-    image: nextcloud
+    image: nextcloud:latest
     restart: always
     ports:
       - ${DOCKER_PORT}:80
