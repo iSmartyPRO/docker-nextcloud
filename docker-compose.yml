@@ -1,5 +1,3 @@
-version: '2'
-
 services:
   nextcloud:
     container_name: ${DOCKER_CONTAINER_NAME}
@@ -24,5 +22,5 @@ services:
 
 networks:
   default:
-    external:
-      name: "docker-lan"
+    external: true
+    name: "docker-lan"
