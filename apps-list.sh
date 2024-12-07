@@ -7,5 +7,4 @@ if [[ $LINE == *'='* ]] && [[ $LINE != '#'* ]]; then
 fi
 done < .env
 
-mkdir ./files/skeleton
-docker exec -u 33 $DOCKER_CONTAINER_NAME php occ config:app:set core defaultTemplateDirectory --value="/var/www/html/html"
+docker exec -u 33 $DOCKER_CONTAINER_NAME php occ app:list
