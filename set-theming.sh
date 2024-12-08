@@ -7,6 +7,7 @@ if [[ $LINE == *'='* ]] && [[ $LINE != '#'* ]]; then
 fi
 done < .env
 
+docker exec -u 33 $DOCKER_CONTAINER_NAME php occ theming:config name "$THEMING_NAME"
 docker exec -u 33 $DOCKER_CONTAINER_NAME php occ theming:config slogan "$THEMING_SLOGAN"
 docker exec -u 33 $DOCKER_CONTAINER_NAME php occ theming:config url $THEMING_URL
 docker exec -u 33 $DOCKER_CONTAINER_NAME php occ theming:config primary_color $THEMING_PRIMARYCOLOR
