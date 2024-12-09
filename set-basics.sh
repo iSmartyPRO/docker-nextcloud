@@ -8,7 +8,7 @@ fi
 done < .env
 
 mkdir ./files/skeleton
-rm -rm ./files/core/skeleton/*
+rm -rf ./files/core/skeleton/*
 docker exec -u 33 $DOCKER_CONTAINER_NAME php occ config:system:set skeletondirectory --type=string --value=""
 docker exec -u 33 $DOCKER_CONTAINER_NAME php occ config:system:set overwriteprotocol --type=string --value="https"
 docker exec -u 33 $DOCKER_CONTAINER_NAME php occ config:system:set default_phone_region --type=string --value="RU"
