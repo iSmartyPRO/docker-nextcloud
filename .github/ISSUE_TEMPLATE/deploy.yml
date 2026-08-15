@@ -1,0 +1,44 @@
+name: Деплой
+description: Новый хост, обновление или перенос не сходятся с runbook
+title: "[deploy] "
+labels: ["deploy"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Выполняйте [docs/deploy.md](https://github.com/iSmartyPRO/docker-nextcloud/blob/main/docs/deploy.md) по шагам.
+        Если шаг не сходится с фактом на сервере — остановитесь и опишите этот шаг, не «чините вокруг».
+  - type: dropdown
+    id: scenario
+    attributes:
+      label: Сценарий
+      options:
+        - A — новый сервер
+        - B — обновление
+        - C — перенос
+        - D — MariaDB → PostgreSQL
+        - Не уверен
+    validations:
+      required: true
+  - type: input
+    id: step
+    attributes:
+      label: Шаг runbook, на котором остановились
+      placeholder: "B5, A4, раздел 7 пункт 14"
+    validations:
+      required: true
+  - type: textarea
+    id: fact
+    attributes:
+      label: Факт на сервере
+      placeholder: Вывод команд без паролей
+    validations:
+      required: true
+  - type: checkboxes
+    id: invariants
+    attributes:
+      label: Инварианты
+      options:
+        - label: Образ собран из Dockerfile, не голый nextcloud:latest
+        - label: .env и backups не попадут в git
+        - label: set-cad.sh уже запускали, если речь про DWG

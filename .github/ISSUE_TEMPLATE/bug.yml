@@ -1,0 +1,57 @@
+name: Сбой
+description: Что-то сломалось на уже поднятом стеке
+title: "[bug] "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Не вставляйте пароли, `.env`, `config.php` и дампы.
+        Для DWG сначала пройдите [docs/cad.md](https://github.com/iSmartyPRO/docker-nextcloud/blob/main/docs/cad.md).
+  - type: dropdown
+    id: area
+    attributes:
+      label: Область
+      options:
+        - Nextcloud / вход
+        - LDAP
+        - SMB
+        - Collabora
+        - CAD / DWG
+        - PostgreSQL
+        - Nginx
+        - Сборка образа
+        - Другое
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Версия Nextcloud
+      placeholder: "34.x, вывод occ status"
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Ожидание
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Факт
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Как воспроизвести
+      placeholder: Команды и клики без секретов
+    validations:
+      required: true
+  - type: textarea
+    id: checks
+    attributes:
+      label: Уже проверено
+      placeholder: "occ status, compose ps, пункт матрицы из docs/deploy.md"

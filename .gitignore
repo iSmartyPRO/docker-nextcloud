@@ -1,3 +1,40 @@
-files/*
-!files/.gitkeep
+# Secrets
 .env
+.env.*
+!.env.sample
+*.pem
+*.key
+*.crt
+*.p12
+*.pfx
+
+# Nextcloud bind-mount (webroot + user data)
+/files/*
+!/files/.gitkeep
+config.php
+nextcloud-init-sync.lock
+
+# Local runtime
+/backups/
+*.sql
+*.sql.gz
+*.dump
+docker-compose.override.yml
+compose.override.yml
+
+# Site-specific reverse-proxy vhosts (keep *.example)
+/nginx/*.conf
+!/nginx/*.conf.example
+
+# Editor / OS
+.vscode/
+.idea/
+.cursor/
+*.swp
+*~
+*.bak
+*.orig
+*.log
+*.tmp
+.DS_Store
+Thumbs.db

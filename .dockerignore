@@ -1,0 +1,17 @@
+.git
+.gitignore
+.env
+files
+backups
+docs
+nginx
+scripts
+theming
+apps
+cad
+*.md
+*.sql
+*.sql.gz
+.cursor
+.vscode
+.idea

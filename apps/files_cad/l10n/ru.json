@@ -1,0 +1,14 @@
+{
+  "translations": {
+    "CAD drawings": "Чертежи CAD",
+    "Drawing": "Чертёж",
+    "Fit": "Вписать",
+    "Print": "Печать",
+    "Download DWG": "Скачать DWG",
+    "Loading drawing…": "Загрузка чертежа…",
+    "Drawing not found or access denied.": "Чертёж не найден или нет доступа.",
+    "Could not render this drawing. Download it and open in a CAD program.": "Не удалось отобразить чертёж. Скачайте файл и откройте в CAD-программе.",
+    "The drawing converter is not in the Nextcloud image. Rebuild the image and open the file again, or download it for AutoCAD / nanoCAD.": "Конвертер чертежей не вшит в образ Nextcloud. Пересоберите образ и откройте файл снова либо скачайте его для AutoCAD / nanoCAD."
+  },
+  "pluralForm": "nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);"
+}

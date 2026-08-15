@@ -1,26 +1,65 @@
 services:
   nextcloud:
     container_name: ${DOCKER_CONTAINER_NAME}
-    image: nextcloud:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: cloud-nextcloud:local
     restart: always
+    mem_limit: 1g
+    memswap_limit: 1g
     ports:
       - ${DOCKER_PORT}:80
     volumes:
       - ./files:/var/www/html
+      - ./apps/files_cad:/var/www/html/custom_apps/files_cad:ro
     environment:
       - NEXTCLOUD_ADMIN_USER=${NEXTCLOUD_ADMIN_USER}
       - NEXTCLOUD_ADMIN_PASSWORD=${NEXTCLOUD_ADMIN_PASSWORD}
-      - MYSQL_PASSWORD=${MYSQL_PASSWORD}
-      - MYSQL_DATABASE=${MYSQL_DATABASE}
-      - MYSQL_USER=${MYSQL_USER}
-      - MYSQL_HOST=${MYSQL_HOST}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_HOST=${POSTGRES_HOST}
       - REDIS_HOST=${DOCKER_CONTAINER_NAME}_redist
+    depends_on:
+      - redis
+
   redis:
-    container_name: ${DOCKER_CONTAINER_NAME}_redist 
+    container_name: ${DOCKER_CONTAINER_NAME}_redist
     expose:
       - 6379
     image: redis:alpine
     restart: always
+
+  collabora:
+    container_name: ${DOCKER_CONTAINER_NAME}_collabora
+    image: collabora/code:latest
+    restart: always
+    mem_limit: 2g
+    memswap_limit: 2g
+    ports:
+      - ${COLLABORA_PORT}:9980
+    environment:
+      - aliasgroup1=${COLLABORA_ALIASGROUP}
+      - username=${COLLABORA_ADMIN_USER}
+      - password=${COLLABORA_ADMIN_PASSWORD}
+      - dictionaries=en_US ru_RU
+      - extra_params=--o:ssl.enable=false --o:ssl.termination=true --o:welcome.enable=false --o:net.frame_ancestors=${NEXTCLOUD_URL} --o:storage.wopi.host[0]=${COLLABORA_WOPI_HOST}
+    cap_add:
+      - MKNOD
+      - SYS_ADMIN
+      - SYS_CHROOT
+      - FOWNER
+      - CHOWN
+    security_opt:
+      - seccomp:unconfined
+      - apparmor:unconfined
+    privileged: true
+    volumes:
+      - ./collabora/busybox:/bin/sh:ro
+      - ./collabora/coolmount:/usr/bin/coolmount:ro
+      - ./collabora/coolmount.real:/usr/bin/coolmount.real:ro
+    tty: true
 
 networks:
   default:

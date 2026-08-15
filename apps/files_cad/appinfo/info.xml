@@ -1,0 +1,24 @@
+<?xml version="1.0"?>
+<info xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:noNamespaceSchemaLocation="https://apps.nextcloud.com/schema/apps/info.xsd">
+	<id>files_cad</id>
+	<name>CAD drawings</name>
+	<name lang="ru">Чертежи CAD</name>
+	<summary>View DWG/DXF construction drawings in the browser</summary>
+	<summary lang="ru">Просмотр строительных чертежей DWG/DXF в браузере</summary>
+	<description>Opens AutoCAD DWG and DXF drawings, generates file-list thumbnails, and keeps office files in Collabora.</description>
+	<description lang="ru">Открывает чертежи AutoCAD DWG и DXF, строит превью в списке файлов и не перехватывает офисные документы у Collabora.</description>
+	<version>1.0.2</version>
+	<licence>agpl</licence>
+	<author>docker-nextcloud</author>
+	<namespace>FilesCad</namespace>
+	<category>files</category>
+	<category>multimedia</category>
+	<bugs>https://github.com/iSmartyPRO/docker-nextcloud/issues</bugs>
+	<dependencies>
+		<nextcloud min-version="31" max-version="36"/>
+	</dependencies>
+	<commands>
+		<command>OCA\FilesCad\Command\ConfigureFileViewer</command>
+	</commands>
+</info>

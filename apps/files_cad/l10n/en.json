@@ -1,0 +1,14 @@
+{
+  "translations": {
+    "CAD drawings": "CAD drawings",
+    "Drawing": "Drawing",
+    "Fit": "Fit",
+    "Print": "Print",
+    "Download DWG": "Download DWG",
+    "Loading drawing…": "Loading drawing…",
+    "Drawing not found or access denied.": "Drawing not found or access denied.",
+    "Could not render this drawing. Download it and open in a CAD program.": "Could not render this drawing. Download it and open in a CAD program.",
+    "The drawing converter is not in the Nextcloud image. Rebuild the image and open the file again, or download it for AutoCAD / nanoCAD.": "The drawing converter is not in the Nextcloud image. Rebuild the image and open the file again, or download it for AutoCAD / nanoCAD."
+  },
+  "pluralForm": "nplurals=2; plural=(n != 1);"
+}

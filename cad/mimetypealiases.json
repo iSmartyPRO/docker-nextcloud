@@ -1,0 +1,17 @@
+{
+  "image/vnd.dwg": "application-dwg",
+  "application/vnd.dwg": "application-dwg",
+  "application/acad": "application-dwg",
+  "application/x-acad": "application-dwg",
+  "application/autocad_dwg": "application-dwg",
+  "application/dwg": "application-dwg",
+  "application/x-dwg": "application-dwg",
+  "application/x-autocad": "application-dwg",
+  "image/x-dwg": "application-dwg",
+  "image/vnd.dxf": "application-dxf",
+  "application/dxf": "application-dxf",
+  "application/x-dxf": "application-dxf",
+  "image/x-dxf": "application-dxf",
+  "model/vnd.dwf": "application-dwg",
+  "model/vnd.dwfx+xps": "application-dwg"
+}

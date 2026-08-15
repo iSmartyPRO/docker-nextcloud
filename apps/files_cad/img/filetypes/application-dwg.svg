@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <rect width="64" height="64" rx="12" fill="#1a1a1a"/>
+  <path d="M14 8h26l10 10v38a4 4 0 0 1-4 4H14a4 4 0 0 1-4-4V12a4 4 0 0 1 4-4z" fill="#2b2b2b" stroke="#3d3d3d" stroke-width="1.5"/>
+  <path d="M40 8v8a2 2 0 0 0 2 2h8" fill="#3a3a3a"/>
+  <path d="M18 46 L26 18 H32 L40 46 H34.6 L33.1 40.2 H24.9 L23.4 46 H18Z M26.4 35.4 H31.6 L29 25.2 L26.4 35.4Z" fill="#E51016"/>
+  <rect x="14" y="50" width="28" height="8" rx="2" fill="#E51016"/>
+  <text x="28" y="56.4" text-anchor="middle" fill="#fff" font-family="Arial, Helvetica, sans-serif" font-size="6.2" font-weight="700">DWG</text>
+</svg>

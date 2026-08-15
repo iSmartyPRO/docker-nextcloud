@@ -1,0 +1,8 @@
+{
+  "dwg": ["image/vnd.dwg"],
+  "dxf": ["image/vnd.dxf"],
+  "dwf": ["model/vnd.dwf"],
+  "dwfx": ["model/vnd.dwfx+xps"],
+  "dgn": ["image/vnd.dgn"],
+  "ifc": ["application/x-ifc"]
+}
