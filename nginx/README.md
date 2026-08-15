@@ -1,14 +1,14 @@
 # Nginx
 
-Образцы reverse proxy для Nextcloud и Collabora. TLS терминируется здесь, контейнеры слушают HTTP.
+Reverse-proxy samples for Nextcloud and Collabora. TLS terminates here; the containers listen on HTTP.
 
-| Файл | Назначение |
+| File | Purpose |
 |---|---|
-| `cloud.conf.example` | HTTPS для `cloud.example.com` → `:8080` |
-| `collabora.conf.example` | HTTPS для `collabora.example.com` → `:9980` |
+| `cloud.conf.example` | HTTPS for `cloud.example.com` → `:8080` |
+| `collabora.conf.example` | HTTPS for `collabora.example.com` → `:9980` |
 
-Скопируйте `*.example` в `conf.d` своего nginx, замените домен и пути к сертификатам. Нужен `map` для `$connection_upgrade` — обычно он уже есть в общем конфиге.
+Copy `*.example` into your nginx `conf.d`, then replace the domain and certificate paths. You need a `map` for `$connection_upgrade` — it is usually already in the main config.
 
-Стендовые vhost’ы с боевыми именами в git не входят.
+Site-specific vhosts with production hostnames are not in git.
 
-Подробности: [docs/nginx.md](../docs/nginx.md).
+Details: [docs/nginx.md](../docs/nginx.md).

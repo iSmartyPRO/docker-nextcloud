@@ -1,74 +1,74 @@
-# Деплой и обновление
+# Deploy and upgrade
 
-Инструкция для исполнителя: человека или ИИ-агента. Выполнять **по шагам, без импровизации** в отмеченных местах. Если шаг не сходится с фактом на сервере — остановиться и спросить, не «чинить вокруг».
+Runbook for an operator: a person or an AI agent. Follow the marked steps **in order, without improvising**. If a step does not match the fact on the server — stop and ask. Do not “fix around it”.
 
-Связанные страницы: [install.md](install.md), [database.md](database.md), [collabora.md](collabora.md), [cad.md](cad.md), [smb.md](smb.md), [nginx.md](nginx.md), [troubleshooting.md](troubleshooting.md).
+Related pages: [install.md](install.md), [database.md](database.md), [collabora.md](collabora.md), [cad.md](cad.md), [smb.md](smb.md), [nginx.md](nginx.md), [troubleshooting.md](troubleshooting.md).
 
 ---
 
-## 0. Роль исполнителя
+## 0. Operator role
 
-1. Прочитать раздел **Инварианты** целиком.
-2. Определить сценарий: **A** новый сервер с нуля, **B** обновление уже работающего стека, **C** перенос копии с другого хоста, **D** смена СУБД MariaDB → Postgres.
-3. Сделать бэкап, если на диске уже есть `files/` или живая база.
-4. Выполнить только выбранный сценарий, затем **матрицу проверки**.
-5. Не коммитить `.env`, не печатать пароли в чат, логи, README.
+1. Read the **Invariants** section in full.
+2. Pick a scenario: **A** new empty host, **B** upgrade of a running stack, **C** move a copy from another host, **D** MariaDB → Postgres.
+3. Take a backup if `files/` or a live database already exists on disk.
+4. Run only the chosen scenario, then the **verification matrix**.
+5. Do not commit `.env`. Do not print passwords in chat, logs, or the README.
 
-Корень репозитория на сервере ниже называется `$ROOT` (каталог, где лежат `docker-compose.yml` и `.env`).
+The repository root on the server is `$ROOT` (the directory that holds `docker-compose.yml` and `.env`).
 
 ```bash
 cd "$ROOT"
 set -a && source .env && set +a
-NC="$DOCKER_CONTAINER_NAME"          # например nextcloud
+NC="$DOCKER_CONTAINER_NAME"          # e.g. nextcloud
 OCC="docker exec -u 33 $NC php occ"
 ```
 
-Все `occ` — только так: пользователь UID 33 (`www-data`). Не root.
+All `occ` commands run this way: UID 33 (`www-data`). Not root.
 
 ---
 
-## 1. Инварианты (не нарушать)
+## 1. Invariants (do not break)
 
-| Запрет | Почему |
+| Do not | Why |
 |---|---|
-| Не ставить `image: nextcloud:latest` без `build` из `Dockerfile` | SMB и LibreDWG пропадут при первом recreate |
-| Не лечить SMB/LibreDWG через `apt install` внутри уже запущенного контейнера | Следующий `compose up` снова сотрёт пакеты |
-| Не делать `docker pull nextcloud` + `up` голого образа | Тот же эффект |
-| Не сажать Nextcloud в чужую Postgres-базу | Отдельная роль и БД только для облака |
-| Не поднимать OnlyOffice | Убран из стека; редактор — Collabora |
-| Не снимать `mem_limit` / `memswap_limit` на хосте ≤6 GiB RAM | Collabora kit съест хост |
-| Не выключать MariaDB, пока `occ config:system:get dbtype` не `pgsql` и проверки не зелёные | Откат |
-| Не коммитить `.env`, `files/`, `backups/` | Секреты и данные |
-| Не пропускать `collabora/apply-caps.sh` после смены образа CODE | Jail self-test снова упадёт |
-| Не считать `occ files_external:verify` доказательством поломки SMB, если шара с логином пользователя | CLI без сессии всегда «No login credentials» |
-| Не заканчивать деплой без `./scripts/set-cad.sh` | `.dwg` останется «неизвестным файлом»: серая иконка и «Сохранить» |
-| Не править `files/resources/config/mimetypemapping.dist.json` | Затрёт обновление ядра; MIME только в `files/config/` |
-| Не класть `files_cad` в `files/apps` | Затрёт `occ upgrade`; живёт в `custom_apps` через том `./apps/files_cad` |
-| Не ставить `fileviewer` без `occ files_cad:configure-fileviewer` | docx/xlsx откроются не в Collabora |
+| Do not set `image: nextcloud:latest` without a `build` from the `Dockerfile` | SMB and LibreDWG disappear on the first recreate |
+| Do not “fix” SMB/LibreDWG with `apt install` inside a running container | The next `compose up` wipes the packages again |
+| Do not `docker pull nextcloud` and `up` a stock image | Same effect |
+| Do not put Nextcloud into someone else’s Postgres database | Dedicated role and database for the cloud only |
+| Do not start OnlyOffice | Removed from the stack; the editor is Collabora |
+| Do not lift `mem_limit` / `memswap_limit` on a host with ≤6 GiB RAM | The Collabora kit will eat the host |
+| Do not stop MariaDB until `occ config:system:get dbtype` is `pgsql` and checks are green | Rollback |
+| Do not commit `.env`, `files/`, `backups/` | Secrets and data |
+| Do not skip `collabora/apply-caps.sh` after a CODE image change | Jail self-test fails again |
+| Do not treat `occ files_external:verify` as proof that SMB is broken when the share uses user login | CLI without a session always says “No login credentials” |
+| Do not finish a deploy without `./scripts/set-cad.sh` | `.dwg` stays an “unknown file”: grey icon and “Save” |
+| Do not edit `files/resources/config/mimetypemapping.dist.json` | A core upgrade overwrites it; MIME lives in `files/config/` |
+| Do not put `files_cad` in `files/apps` | `occ upgrade` overwrites it; it lives in `custom_apps` via `./apps/files_cad` |
+| Do not install `fileviewer` without `occ files_cad:configure-fileviewer` | docx/xlsx open outside Collabora |
 
-Обязательные факты стека:
+Hard facts about the stack:
 
-- Сеть Docker: внешняя `docker-lan` (compose **не** создаёт её сам).
-- Nextcloud слушает `DOCKER_PORT` (обычно 8080), Collabora — `COLLABORA_PORT` (обычно 9980).
-- Образ приложения: `cloud-nextcloud:local`, сборка из `Dockerfile` (вшиты `smbclient`, PHP `smbclient`, LibreDWG, `rsvg-convert`).
-- Приложение чертежей: `./apps/files_cad` монтируется в `custom_apps/files_cad`. После смены compose — `docker compose up -d nextcloud`, иначе том не появится.
-- Просмотр DWG: `./scripts/set-cad.sh` (MIME + иконки + `fileviewer` + `configure-fileviewer`). Без `occ maintenance:mimetype:update-db --repair-filecache` уже лежащие `.dwg` не откроются кликом.
-- Тонкости CAD: [cad.md](cad.md).
-- Лимиты: Nextcloud 1 GiB, Collabora 2 GiB, swap у них выключен (`memswap_limit` = `mem_limit`).
-- `COLLABORA_WOPI_HOST` — hostname облака **без** `https://` (пример: `cloud.example.com`).
-- Nginx / SSL обычно на другом контейнере или хосте. Этот репозиторий только отдаёт образцы в `nginx/`.
+- Docker network: external `docker-lan` (compose does **not** create it).
+- Nextcloud listens on `DOCKER_PORT` (usually 8080), Collabora on `COLLABORA_PORT` (usually 9980).
+- Application image: `cloud-nextcloud:local`, built from the `Dockerfile` (`smbclient`, PHP `smbclient`, LibreDWG, `rsvg-convert`).
+- Drawing app: `./apps/files_cad` mounts into `custom_apps/files_cad`. After a compose change, run `docker compose up -d nextcloud` or the volume will not appear.
+- DWG viewing: `./scripts/set-cad.sh` (MIME + icons + `fileviewer` + `configure-fileviewer`). Without `occ maintenance:mimetype:update-db --repair-filecache`, existing `.dwg` files will not open on click.
+- CAD details: [cad.md](cad.md).
+- Limits: Nextcloud 1 GiB, Collabora 2 GiB, swap off (`memswap_limit` = `mem_limit`).
+- `COLLABORA_WOPI_HOST` is the cloud hostname **without** `https://` (example: `cloud.example.com`).
+- Nginx / TLS usually live on another container or host. This repository only ships samples in `nginx/`.
 
 ---
 
-## 2. Ресурсы хоста
+## 2. Host resources
 
-Минимум для Nextcloud + Redis + Collabora + отдельный Postgres:
+Minimum for Nextcloud + Redis + Collabora + a separate Postgres:
 
 - 4 vCPU
-- 6 GiB RAM (лучше 8, если много одновременных документов)
-- диск: `./files` растёт вместе с данными пользователей; система + образы ≈ 10–15 GiB
+- 6 GiB RAM (8 is better if many documents are open at once)
+- disk: `./files` grows with user data; system + images ≈ 10–15 GiB
 
-Перед работой:
+Before you start:
 
 ```bash
 nproc
@@ -77,13 +77,13 @@ df -h /
 docker network inspect docker-lan >/dev/null
 ```
 
-Если `docker-lan` нет: `docker network create docker-lan`.
+If `docker-lan` is missing: `docker network create docker-lan`.
 
 ---
 
-## 3. Сценарий A — новый сервер, пустой инстанс
+## 3. Scenario A — new host, empty instance
 
-### A1. Код и `.env`
+### A1. Code and `.env`
 
 ```bash
 git clone <repo-url> "$ROOT"
@@ -91,29 +91,29 @@ cd "$ROOT"
 cp .env.sample .env
 ```
 
-Заполнить `.env` (не оставлять значения из sample):
+Fill `.env` (do not leave sample values):
 
 - `DOCKER_CONTAINER_NAME`, `DOCKER_PORT`
 - `NEXTCLOUD_ADMIN_*`
-- `POSTGRES_HOST` — DNS-имя контейнера Postgres в `docker-lan`
-- `POSTGRES_DB`, `POSTGRES_USER`, `POSTGRES_PASSWORD` — **новые**, только для облака
+- `POSTGRES_HOST` — DNS name of the Postgres container on `docker-lan`
+- `POSTGRES_DB`, `POSTGRES_USER`, `POSTGRES_PASSWORD` — **new**, for the cloud only
 - `NEXTCLOUD_URL`, `THEMING_URL`, `COLLABORA_URL`, `COLLABORA_ALIASGROUP`, `COLLABORA_WOPI_HOST`
 - `MAIL_*`, `LDAP_*`, `COLLABORA_ADMIN_*`
 
-`COLLABORA_ALIASGROUP` обычно `https://<облако>:443`.
+`COLLABORA_ALIASGROUP` is usually `https://<cloud-host>:443`.
 
 ### A2. Postgres
 
-На хосте с Postgres (тот же `docker-lan`):
+On the Postgres host (same `docker-lan`):
 
 ```sql
 CREATE ROLE nextcloud LOGIN PASSWORD '<POSTGRES_PASSWORD>';
 CREATE DATABASE nextcloud OWNER nextcloud ENCODING 'UTF8' TEMPLATE template0;
 ```
 
-Имена заменить на значения из `.env`. Не использовать существующую чужую БД.
+Replace names with the values from `.env`. Do not reuse someone else’s database.
 
-Проверка с хоста облака:
+Check from the cloud host:
 
 ```bash
 docker run --rm --network docker-lan postgres:18-alpine \
@@ -121,7 +121,7 @@ docker run --rm --network docker-lan postgres:18-alpine \
   -c 'SELECT current_user, current_database();'
 ```
 
-### A3. Сборка и старт
+### A3. Build and start
 
 ```bash
 cd "$ROOT"
@@ -131,17 +131,17 @@ docker compose up -d
 docker compose ps
 ```
 
-Ждать, пока Nextcloud станет `installed: true`:
+Wait until Nextcloud reports `installed: true`:
 
 ```bash
 $OCC status
 ```
 
-Если контейнер только что создал `files/` — это нормально. Не копировать сюда чужой `files/` (это уже сценарий C).
+If the container just created `files/`, that is expected. Do not copy another host’s `files/` here (that is scenario C).
 
-### A4. Первичная настройка
+### A4. First-time setup
 
-По порядку:
+In this order:
 
 ```bash
 ./scripts/set-basics.sh
@@ -152,39 +152,39 @@ $OCC status
 ./scripts/set-cad.sh
 ```
 
-`set-basics.sh` выставляет `overwriteprotocol=https`, квоту, почту, индексы. Нужен для CSP/логина за HTTPS-прокси.
+`set-basics.sh` sets `overwriteprotocol=https`, quota, mail, and indexes. Required for CSP / login behind an HTTPS proxy.
 
-`set-cad.sh` обязателен: ядро Nextcloud не знает `.dwg`. Без него клик предлагает сохранить файл, иконка серая. После скрипта в браузере Ctrl+F5. Подробности и ловушки: [cad.md](cad.md).
+`set-cad.sh` is mandatory: Nextcloud core does not know `.dwg`. Without it, a click offers to save the file and the icon stays grey. After the script, hard-refresh the browser (Ctrl+F5). Details and pitfalls: [cad.md](cad.md).
 
-### A5. Nginx (часто другой хост)
+### A5. Nginx (often another host)
 
-Скопировать и адаптировать:
+Copy and adapt:
 
-- `nginx/cloud.conf.example` → `cloud.<domain>` на `:DOCKER_PORT`
-- `nginx/collabora.conf.example` → `collabora.<domain>` на `:COLLABORA_PORT`
+- `nginx/cloud.conf.example` → `cloud.<domain>` on `:DOCKER_PORT`
+- `nginx/collabora.conf.example` → `collabora.<domain>` on `:COLLABORA_PORT`
 
-Обязательны `X-Forwarded-Proto`, WebSocket (`Upgrade` / `Connection`), большой `client_max_body_size` у облака.
+Required: `X-Forwarded-Proto`, WebSocket (`Upgrade` / `Connection`), a large `client_max_body_size` on the cloud vhost.
 
-Выпустить сертификаты. Прокси должен резолвить бэкенд (на том же хосте — `127.0.0.1`, в docker-сети — имя контейнера).
+Issue certificates. The proxy must resolve the backend (same host: `127.0.0.1`; docker network: container name).
 
-### A6. Jail Collabora
+### A6. Collabora jail
 
-Если Collabora в `unhealthy` или в логах mount/self-test:
+If Collabora is `unhealthy` or logs show a mount/self-test failure:
 
 ```bash
 ./collabora/apply-caps.sh
 docker compose up -d collabora
 ```
 
-Перейти к разделу 7 (проверка).
+Go to section 7 (verification).
 
 ---
 
-## 4. Сценарий B — обновление существующего сервера
+## 4. Scenario B — upgrade an existing server
 
-Это путь «уже работает, нужно обновить код/образы/схему». Не создавать новую БД. Не запускать `set-ldap.sh` / `set-basics.sh` без нужды (они перезаписывают настройки).
+This is “it already works; update code / images / schema”. Do not create a new database. Do not run `set-ldap.sh` / `set-basics.sh` unless you mean to overwrite settings.
 
-### B1. Зафиксировать текущее состояние
+### B1. Record the current state
 
 ```bash
 cd "$ROOT"
@@ -197,9 +197,9 @@ docker exec "$NC" php -m | grep -i smb
 curl -sI -H "Host: $(echo "$NEXTCLOUD_URL" | sed 's#https://##')" http://127.0.0.1:${DOCKER_PORT}/status.php
 ```
 
-Записать: версия Nextcloud, `dbtype`, число пользователей, SMB есть/нет.
+Write down: Nextcloud version, `dbtype`, user count, SMB present or not.
 
-### B2. Бэкап (обязательно)
+### B2. Backup (mandatory)
 
 ```bash
 mkdir -p backups
@@ -207,46 +207,46 @@ STAMP=$(date -u +%Y%m%dT%H%M%SZ)
 cp -a files/config/config.php "backups/config.php.$STAMP"
 docker exec "$POSTGRES_HOST" pg_dump -U "$POSTGRES_USER" "$POSTGRES_DB" \
   | gzip > "backups/${POSTGRES_DB}.$STAMP.sql.gz"
-# при большом files/ — снимок каталога или тома, не только config
+# if files/ is large — snapshot the directory or volume, not only config
 ```
 
-Проверить, что дамп не пустой (`gzip -t`, размер > 0).
+Confirm the dump is not empty (`gzip -t`, size > 0).
 
-### B3. Код
+### B3. Code
 
 ```bash
 git status
 git pull --ff-only
 ```
 
-Если pull не fast-forward — остановиться. Не делать merge «на глаз» на проде.
+If the pull is not fast-forward — stop. Do not merge “by eye” on production.
 
-Сверить, что в `docker-compose.yml` по-прежнему `build:` + `image: cloud-nextcloud:local`, тома Collabora из `./collabora/`, есть `COLLABORA_WOPI_HOST`. Если в `.env` нет `COLLABORA_WOPI_HOST` — добавить (hostname облака без схемы).
+Confirm `docker-compose.yml` still has `build:` + `image: cloud-nextcloud:local`, Collabora volumes from `./collabora/`, and `COLLABORA_WOPI_HOST`. If `.env` has no `COLLABORA_WOPI_HOST`, add it (cloud hostname, no scheme).
 
-### B4. Образы
+### B4. Images
 
 ```bash
 docker compose pull redis collabora
 ./scripts/rebuild-image.sh
 ```
 
-`rebuild-image.sh` пересобирает Nextcloud **с SMB** и пересоздаёт контейнер. Каталог `./files` остаётся.
+`rebuild-image.sh` rebuilds Nextcloud **with SMB** and recreates the container. `./files` stays.
 
-После смены Collabora:
+After a Collabora image change:
 
 ```bash
 ./collabora/apply-caps.sh
 docker compose up -d collabora
 ```
 
-### B5. Миграции схемы Nextcloud
+### B5. Nextcloud schema migrations
 
 ```bash
 $OCC status
 ```
 
-- `needsDbUpgrade: true` или сообщение про upgrade → идти дальше.
-- `maintenance: true` без вашей команды — не снимать, пока не выполнен upgrade.
+- `needsDbUpgrade: true` or an upgrade message → continue.
+- `maintenance: true` that you did not set — do not turn it off until upgrade finishes.
 
 ```bash
 $OCC maintenance:mode --on
@@ -259,11 +259,11 @@ $OCC maintenance:mode --off
 $OCC status
 ```
 
-Если `upgrade` падает — **не** выключать maintenance, не откатывать файлы без дампа. Сохранить хвост лога, остановиться.
+If `upgrade` fails — **do not** turn maintenance off, do not roll files back without a dump. Keep the tail of the log and stop.
 
-`db:convert-filecache-bigint` на уже мигрированном инстансе обычно no-op; повторный запуск безопасен, но не обязателен.
+`db:convert-filecache-bigint` is usually a no-op on an already migrated instance. A second run is safe but not required.
 
-### B6. Приложения и редактор
+### B6. Apps and editor
 
 ```bash
 $OCC app:update --all || true
@@ -271,64 +271,64 @@ $OCC richdocuments:activate-config
 ./scripts/set-cad.sh
 ```
 
-`set-cad.sh` снова кладёт иконки DWG в `files/core/` (ядро их затирает при upgrade) и не даёт `fileviewer` забрать офисные форматы.
+`set-cad.sh` puts DWG icons back into `files/core/` (core wipes them on upgrade) and keeps `fileviewer` off office formats.
 
-Не включать заново OnlyOffice. Не вызывать `apps-disable.sh` на проде без явной просьбы — он гасит много штатных приложений.
+Do not enable OnlyOffice again. Do not run `apps-disable.sh` on production unless someone explicitly asked — it turns off many stock apps.
 
-Перейти к разделу 7.
-
----
-
-## 5. Сценарий C — перенос на новый сервер (копия живого инстанса)
-
-1. На старом: бэкап как в B2 + архив `files/` (весь bind-mount) + копия `.env`.
-2. На новом: клон репозитория, положить `.env`, распаковать `files/` в `$ROOT/files` (владельцы: как было, обычно `www-data` / UID 33).
-3. Создать в Postgres **пустую** БД с теми же именем/ролью, что в `.env`, восстановить дамп.
-4. `docker network create docker-lan` при необходимости.
-5. `docker compose build && docker compose up -d` — **не** запускать мастер установки, `files/config/config.php` уже есть.
-6. Проверить, что в `config.php` `dbhost` / `dbname` / пароль совпадают с новым Postgres (имя контейнера могло измениться).
-7. `./collabora/apply-caps.sh` при необходимости.
-8. `docker compose up -d nextcloud` — чтобы том `./apps/files_cad` точно сел; затем `./scripts/set-cad.sh` (идемпотентно: MIME, иконки, fileviewer).
-9. Nginx и DNS на новый хост.
-10. Раздел 7. Старый сервер не гасить, пока проверки не зелёные.
-
-Не запускать `set-basics.sh` / `set-ldap.sh` сразу после переноса — они перепишут уже рабочие настройки. Только если что-то заведомо нужно обновить. `set-cad.sh` после переноса запускать можно.
+Go to section 7.
 
 ---
 
-## 6. Сценарий D — миграция MariaDB → PostgreSQL
+## 5. Scenario C — move to a new host (copy of a live instance)
 
-Делать только если `occ config:system:get dbtype` = `mysql` и есть задача сменить СУБД. На чистом Postgres этот раздел пропустить.
+1. On the old host: backup as in B2 + archive of `files/` (the whole bind-mount) + a copy of `.env`.
+2. On the new host: clone the repo, place `.env`, unpack `files/` into `$ROOT/files` (owners as before, usually `www-data` / UID 33).
+3. Create an **empty** Postgres database with the same name/role as in `.env`, restore the dump.
+4. `docker network create docker-lan` if needed.
+5. `docker compose build && docker compose up -d` — **do not** run the install wizard; `files/config/config.php` already exists.
+6. Confirm `config.php` `dbhost` / `dbname` / password match the new Postgres (the container name may have changed).
+7. `./collabora/apply-caps.sh` if needed.
+8. `docker compose up -d nextcloud` so the `./apps/files_cad` volume is attached; then `./scripts/set-cad.sh` (idempotent: MIME, icons, fileviewer).
+9. Point nginx and DNS at the new host.
+10. Section 7. Do not shut down the old server until checks are green.
 
-### D1. Подготовка
+Do not run `set-basics.sh` / `set-ldap.sh` right after a move — they overwrite working settings. Only if something must be updated on purpose. `set-cad.sh` after a move is fine.
 
-- Дамп MariaDB + копия `config.php` (B2).
-- Пустая Postgres-БД и роль **только** для облака. Права: владелец БД и схемы `public`.
-- Проверка `pdo_pgsql` в контейнере: `docker exec "$NC" php -m | grep pdo_pgsql`.
-- Связность: из контейнера Nextcloud PDO к `POSTGRES_HOST`.
+---
 
-### D2. Конвертация
+## 6. Scenario D — MariaDB → PostgreSQL
+
+Do this only if `occ config:system:get dbtype` is `mysql` and the task is to change the engine. Skip this section on a clean Postgres install.
+
+### D1. Prepare
+
+- MariaDB dump + a copy of `config.php` (B2).
+- Empty Postgres database and role **for the cloud only**. Rights: owner of the database and the `public` schema.
+- Confirm `pdo_pgsql` in the container: `docker exec "$NC" php -m | grep pdo_pgsql`.
+- Connectivity: PDO from the Nextcloud container to `POSTGRES_HOST`.
+
+### D2. Convert
 
 ```bash
 $OCC maintenance:mode --on
-# пароль лучше через stdin / --password, не светить в history
+# pass the password via stdin / --password, do not leave it in history
 $OCC db:convert-type -n --all-apps pgsql "$POSTGRES_USER" "$POSTGRES_HOST" "$POSTGRES_DB"
 ```
 
-Ожидаемый сбой Nextcloud 34: в конце
+Expected Nextcloud 34 failure at the end:
 
 ```
 SELECT setval('oc_jobs_id_seq', (SELECT MAX() FROM ))
 ```
 
-или `setval ... out of bounds` (id в `oc_jobs` — snowflake > integer).
+or `setval ... out of bounds` (`oc_jobs` ids are snowflakes larger than integer).
 
-`config.php` при падении часто **ещё mysql** — это хорошо.
+On failure, `config.php` is often **still mysql** — that is good.
 
-Тогда:
+Then:
 
-1. Сверить число таблиц и ключевых строк (`oc_users`, `oc_filecache`, `oc_ldap_user_mapping`, `oc_jobs`, `oc_appconfig`). Таблицы удалённого OnlyOffice можно не переносить.
-2. В Postgres выполнить:
+1. Compare table counts and key row counts (`oc_users`, `oc_filecache`, `oc_ldap_user_mapping`, `oc_jobs`, `oc_appconfig`). Tables from a removed OnlyOffice can be skipped.
+2. In Postgres run:
 
 ```sql
 DO $$
@@ -366,103 +366,103 @@ BEGIN
 END $$;
 ```
 
-3. Переключить `config.php`: `dbtype=pgsql`, `dbhost=$POSTGRES_HOST`, `dbname`, `dbuser`, `dbpassword`, при необходимости `dbport=5432`.
-4. В compose / `.env` заменить `MYSQL_*` на `POSTGRES_*` (как в текущем репозитории).
+3. Switch `config.php`: `dbtype=pgsql`, `dbhost=$POSTGRES_HOST`, `dbname`, `dbuser`, `dbpassword`, and `dbport=5432` if needed.
+4. In compose / `.env` replace `MYSQL_*` with `POSTGRES_*` (as in this repository).
 5. `$OCC status` — `needsDbUpgrade: false`.
-6. `$OCC user:report` — те же цифры, что до миграции (LDAP виден **после** `maintenance:mode --off`).
+6. `$OCC user:report` — same numbers as before the migration (LDAP is visible **after** `maintenance:mode --off`).
 7. `$OCC richdocuments:activate-config`.
-8. Матрица проверки. Только потом `docker stop` MariaDB и `docker update --restart=no`. Данные MariaDB не удалять несколько дней.
+8. Verification matrix. Only then `docker stop` MariaDB and `docker update --restart=no`. Keep MariaDB data for a few days.
 
 ---
 
-## 7. Матрица проверки (все сценарии)
+## 7. Verification matrix (every scenario)
 
-Не объявлять успех, пока не пройдено.
+Do not call it done until this passes.
 
-| # | Проверка | Ожидание |
+| # | Check | Expected |
 |---|---|---|
 | 1 | `docker compose ps` | `nextcloud`, `redis`, `collabora` Up; Collabora `healthy` |
 | 2 | `$OCC status` | `installed: true`, `maintenance: false`, `needsDbUpgrade: false` |
 | 3 | `$OCC config:system:get dbtype` | `pgsql` |
-| 4 | `$OCC user:report` | Пользователи на месте (LDAP не ноль, если AD включён) |
-| 5 | `docker exec $NC php -m \| grep smb` | Есть `smbclient` и/или `libsmbclient` |
-| 6 | `docker exec $NC smbclient -V` | Версия Samba |
+| 4 | `$OCC user:report` | Users still there (LDAP is not zero if AD is on) |
+| 5 | `docker exec $NC php -m \| grep smb` | `smbclient` and/or `libsmbclient` |
+| 6 | `docker exec $NC smbclient -V` | Samba version |
 | 7 | `curl -s http://127.0.0.1:$DOCKER_PORT/status.php` | JSON, `installed: true` |
-| 8 | HTTPS логин (локальный админ и LDAP) | Вход без «обновите страницу» |
-| 9 | Файлы и шара SMB в веб-UI | Каталог открывается под пользователем AD |
-| 10 | `curl -sk $COLLABORA_URL/hosting/capabilities` | JSON/XML, не 502 |
+| 8 | HTTPS login (local admin and LDAP) | Sign-in without “reload the page” |
+| 9 | Files and an SMB share in the web UI | Folder opens as the AD user |
+| 10 | `curl -sk $COLLABORA_URL/hosting/capabilities` | JSON/XML, not 502 |
 | 11 | `$OCC richdocuments:activate-config` | discovery + capabilities OK |
-| 12 | Открыть docx/xlsx в браузере | Редактор Collabora, не File Viewer и не OnlyOffice |
-| 13 | `$OCC app:list \| grep -E 'files_cad\|fileviewer'` | Оба enabled |
-| 14 | Открыть `.dwg` в веб-UI (Ctrl+F5) | Красная иконка AutoCAD; клик открывает чертёж, не «Сохранить» |
+| 12 | Open docx/xlsx in the browser | Collabora editor, not File Viewer or OnlyOffice |
+| 13 | `$OCC app:list \| grep -E 'files_cad\|fileviewer'` | Both enabled |
+| 14 | Open a `.dwg` in the web UI (Ctrl+F5) | Red AutoCAD icon; click opens the drawing, not “Save” |
 | 15 | `docker inspect $NC --format '{{.HostConfig.Memory}}'` | 1073741824 (1 GiB) |
 | 16 | `docker inspect ${NC}_collabora --format '{{.HostConfig.Memory}}'` | 2147483648 (2 GiB) |
 
-Пункт 14 важнее наличия `dwg2SVG`. Конвертер нужен только для миниатюр в списке; его нет — не откатывать деплой, если клик по DWG уже открывает чертёж. После смены MIME в браузере обязателен Ctrl+F5.
+Item 14 matters more than `dwg2SVG`. The converter is only for list thumbnails. If it is missing, do not roll back the deploy when a DWG click already opens the drawing. After a MIME change, Ctrl+F5 in the browser is mandatory.
 
-Пункт 9 из CLI не подменять `files_external:verify`, если authentication = login credentials.
-
----
-
-## 8. Откат
-
-### После неудачного `occ upgrade` (сценарий B)
-
-1. Оставить maintenance **вкл**.
-2. Восстановить `files/config/config.php` из `backups/`.
-3. Восстановить Postgres из `backups/*.sql.gz` в ту же БД (или во временную и переключить `dbname`).
-4. Вернуть предыдущий git-тег/коммит, `./scripts/rebuild-image.sh`.
-5. `$OCC maintenance:mode --off` только когда `status` зелёный.
-
-### После неудачной смены СУБД (сценарий D)
-
-1. Вернуть `config.php` с `dbtype=mysql`.
-2. Запустить MariaDB, если останавливали.
-3. Не дропать новую Postgres-базу — она может пригодиться для повторной попытки (`--clear-schema`).
-
-### После переноса (сценарий C)
-
-Держать старый сервер доступным, пока новый не прошёл матрицу. DNS переключать последним.
+Do not replace item 9 with `files_external:verify` from the CLI when authentication is login credentials.
 
 ---
 
-## 9. Когда остановиться и спросить
+## 8. Rollback
 
-- `git pull` не fast-forward, конфликт.
-- `occ upgrade` падает.
-- Число пользователей после работ меньше, чем в B1.
-- SMB-модулей нет после `rebuild-image.sh`.
-- Collabora unhealthy после `apply-caps.sh`.
-- На хосте нет `docker-lan`, но есть другая сеть с живыми БД — не создавать вторую «наугад».
-- В `.env` и `config.php` разные пароли/хосты БД.
-- Свободно < 5 GiB на диске или RAM available < 1 GiB перед обновлением.
-- Просят «просто поднять OnlyOffice обратно» — это смена архитектуры, не часть этого runbook.
-- После `set-cad.sh` клик по `.dwg` всё ещё «Сохранить» — не ставить другой CAD с водяным знаком. Идти в [cad.md](cad.md) (MIME / filecache / том / Ctrl+F5).
-- `docker exec $NC test -f /var/www/html/custom_apps/files_cad/appinfo/info.xml` падает после правки compose — не копировать в `files/apps`, а `docker compose up -d nextcloud`.
+### After a failed `occ upgrade` (scenario B)
+
+1. Leave maintenance **on**.
+2. Restore `files/config/config.php` from `backups/`.
+3. Restore Postgres from `backups/*.sql.gz` into the same database (or a temporary one and switch `dbname`).
+4. Return to the previous git tag/commit, `./scripts/rebuild-image.sh`.
+5. `$OCC maintenance:mode --off` only when `status` is green.
+
+### After a failed engine change (scenario D)
+
+1. Restore `config.php` with `dbtype=mysql`.
+2. Start MariaDB if you stopped it.
+3. Do not drop the new Postgres database — you may need it for a retry (`--clear-schema`).
+
+### After a move (scenario C)
+
+Keep the old server reachable until the new one passes the matrix. Switch DNS last.
 
 ---
 
-## 10. Краткая шпаргалка команд
+## 9. When to stop and ask
+
+- `git pull` is not fast-forward, conflict.
+- `occ upgrade` fails.
+- User count after the work is lower than in B1.
+- SMB modules are missing after `rebuild-image.sh`.
+- Collabora is unhealthy after `apply-caps.sh`.
+- The host has no `docker-lan`, but another network already holds live databases — do not create a second one “at random”.
+- `.env` and `config.php` have different database passwords/hosts.
+- Free disk < 5 GiB or available RAM < 1 GiB before an upgrade.
+- Someone asks to “just bring OnlyOffice back” — that is an architecture change, not part of this runbook.
+- After `set-cad.sh` a `.dwg` click still says “Save” — do not install another CAD viewer with a watermark. Go to [cad.md](cad.md) (MIME / filecache / volume / Ctrl+F5).
+- `docker exec $NC test -f /var/www/html/custom_apps/files_cad/appinfo/info.xml` fails after a compose edit — do not copy into `files/apps`; run `docker compose up -d nextcloud`.
+
+---
+
+## 10. Command cheat sheet
 
 ```bash
-# сборка Nextcloud со SMB и LibreDWG (миниатюры DWG)
+# rebuild Nextcloud with SMB and LibreDWG (DWG thumbnails)
 ./scripts/rebuild-image.sh
 
-# DWG: MIME, иконки, fileviewer, не отдать офис File Viewer
+# DWG: MIME, icons, fileviewer, keep office files off File Viewer
 ./scripts/set-cad.sh
 
-# Collabora после pull образа
+# Collabora after an image pull
 ./collabora/apply-caps.sh
 docker compose up -d collabora
 
-# схема
+# schema
 docker exec -u 33 "$DOCKER_CONTAINER_NAME" php occ upgrade
 docker exec -u 33 "$DOCKER_CONTAINER_NAME" php occ db:add-missing-indices
 docker exec -u 33 "$DOCKER_CONTAINER_NAME" php occ db:add-missing-columns
 docker exec -u 33 "$DOCKER_CONTAINER_NAME" php occ db:add-missing-primary-keys
-./scripts/set-cad.sh   # ядро затёрло иконки DWG в files/core/
+./scripts/set-cad.sh   # core overwrote DWG icons in files/core/
 
-# здоровье
+# health
 docker exec -u 33 "$DOCKER_CONTAINER_NAME" php occ status
 docker exec -u 33 "$DOCKER_CONTAINER_NAME" php occ user:report
 docker exec -u 33 "$DOCKER_CONTAINER_NAME" php occ richdocuments:activate-config

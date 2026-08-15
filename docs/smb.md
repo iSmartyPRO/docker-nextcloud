@@ -1,29 +1,29 @@
-# SMB / внешние хранилища
+# SMB / external storage
 
-Клиент SMB вшит в образ `cloud-nextcloud:local` (`Dockerfile`): пакет `smbclient` и PHP-расширение `smbclient`. Пересоздание контейнера их не стирает.
+The SMB client is baked into `cloud-nextcloud:local` (`Dockerfile`): the `smbclient` package and the PHP `smbclient` extension. Recreating the container does not remove them.
 
-## Включение приложения
+## Enable the app
 
 ```bash
 ./scripts/apps-enable.sh
 ```
 
-Дальше шару настраивают в админке Nextcloud → Внешние хранилища (SMB/CIFS).
+Then configure the share in Nextcloud admin → External storage (SMB/CIFS).
 
-Типичный вариант: логин пользователя из LDAP (`Log-in credentials, save in database`). Тогда `occ files_external:verify` из CLI пишет «No login credentials saved» — это ожидаемо, проверка идёт после входа пользователя.
+Typical setup: the LDAP user’s login (`Log-in credentials, save in database`). Then `occ files_external:verify` from the CLI prints “No login credentials saved” — that is expected. The check runs after the user signs in.
 
-## Обновление образа Nextcloud
+## Upgrade the Nextcloud image
 
-Не делайте `docker pull nextcloud` + `up` голого `nextcloud:latest`. Собирайте свой образ:
+Do not `docker pull nextcloud` and `up` a stock `nextcloud:latest`. Build your own image:
 
 ```bash
 ./scripts/rebuild-image.sh
 ```
 
-или
+or
 
 ```bash
 docker compose build nextcloud && docker compose up -d nextcloud
 ```
 
-Иначе SMB снова исчезнет.
+Otherwise SMB disappears again.

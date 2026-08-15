@@ -1,17 +1,17 @@
-# База данных
+# Database
 
-Nextcloud 34 поддерживает PostgreSQL 14–18. Этот стек рассчитан на внешний Postgres в сети `docker-lan`.
+Nextcloud 34 supports PostgreSQL 14–18. This stack expects an external Postgres on `docker-lan`.
 
-## Рекомендуемая схема
+## Recommended layout
 
-Отдельная роль и база только для Nextcloud. Не сажайте облако в чужую уже занятую БД.
+A dedicated role and database for Nextcloud only. Do not put the cloud into someone else’s already used database.
 
 ```sql
 CREATE ROLE nextcloud LOGIN PASSWORD 'strong-password';
 CREATE DATABASE nextcloud OWNER nextcloud ENCODING 'UTF8' TEMPLATE template0;
 ```
 
-В `.env`:
+In `.env`:
 
 ```
 POSTGRES_HOST=postgres
@@ -20,21 +20,21 @@ POSTGRES_USER=nextcloud
 POSTGRES_PASSWORD=strong-password
 ```
 
-## Миграция с MariaDB
+## Migrate from MariaDB
 
-Если инстанс уже жил на MySQL/MariaDB:
+If the instance already ran on MySQL/MariaDB:
 
-1. Снимите дамп MariaDB и копию `files/config/config.php`.
-2. Создайте пустую базу в Postgres.
-3. Включите maintenance: `occ maintenance:mode --on`.
-4. Выполните `occ db:convert-type pgsql <user> <host> <database>`.
-5. Если конвертер упадёт на `setval` для `oc_jobs` (snowflake id больше integer) — переведите sequences на `bigint` и выставьте `setval` по `MAX(id)`.
-6. Переключите `config.php` на `dbtype=pgsql` и `dbhost` Postgres.
-7. Проверьте `occ status`, `occ user:report`, вход и Collabora.
-8. Только после этого останавливайте MariaDB.
+1. Take a MariaDB dump and a copy of `files/config/config.php`.
+2. Create an empty database in Postgres.
+3. Turn maintenance on: `occ maintenance:mode --on`.
+4. Run `occ db:convert-type pgsql <user> <host> <database>`.
+5. If the converter fails on `setval` for `oc_jobs` (snowflake id larger than integer) — alter sequences to `bigint` and set `setval` from `MAX(id)`.
+6. Switch `config.php` to `dbtype=pgsql` and the Postgres `dbhost`.
+7. Check `occ status`, `occ user:report`, login, and Collabora.
+8. Only then stop MariaDB.
 
-Таблицы удалённых приложений (например OnlyOffice) можно не переносить.
+Tables from removed apps (for example OnlyOffice) can be skipped.
 
-## Лимиты
+## Limits
 
-У контейнера Nextcloud лимит 1 GiB RAM, у Collabora — 2 GiB. Postgres обычно ограничен отдельно (в своём compose).
+The Nextcloud container is limited to 1 GiB RAM, Collabora to 2 GiB. Postgres is usually limited in its own compose file.

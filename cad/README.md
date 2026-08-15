@@ -1,16 +1,16 @@
-# MIME чертежей
+# Drawing MIME types
 
-Расширения и алиасы иконок для строительных файлов. `scripts/set-cad.sh` мержит их в `files/config/`.
+Extensions and icon aliases for construction files. `scripts/set-cad.sh` merges them into `files/config/`.
 
-Не писать то же самое в `files/resources/config/mimetypemapping.dist.json` — файл затрёт обновление Nextcloud.
+Do not write the same mapping into `files/resources/config/mimetypemapping.dist.json` — a Nextcloud upgrade overwrites that file.
 
-После копирования на новый хост обязательны:
+After you copy this onto a new host, these are mandatory:
 
 ```bash
 occ maintenance:mimetype:update-db --repair-filecache
 occ maintenance:mimetype:update-js
 ```
 
-Иначе уже лежащие `.dwg` (в том числе на SMB) останутся `application/octet-stream`.
+Otherwise existing `.dwg` files (including on SMB) stay `application/octet-stream`.
 
-Полный разбор: [docs/cad.md](../docs/cad.md).
+Full write-up: [docs/cad.md](../docs/cad.md).

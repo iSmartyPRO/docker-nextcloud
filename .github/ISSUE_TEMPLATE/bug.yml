@@ -1,57 +1,57 @@
-name: Сбой
-description: Что-то сломалось на уже поднятом стеке
+name: Bug
+description: Something broke on an already running stack
 title: "[bug] "
 labels: ["bug"]
 body:
   - type: markdown
     attributes:
       value: |
-        Не вставляйте пароли, `.env`, `config.php` и дампы.
-        Для DWG сначала пройдите [docs/cad.md](https://github.com/iSmartyPRO/docker-nextcloud/blob/main/docs/cad.md).
+        Do not paste passwords, `.env`, `config.php`, or dumps.
+        For DWG, go through [docs/cad.md](https://github.com/iSmartyPRO/docker-nextcloud/blob/main/docs/cad.md) first.
   - type: dropdown
     id: area
     attributes:
-      label: Область
+      label: Area
       options:
-        - Nextcloud / вход
+        - Nextcloud / login
         - LDAP
         - SMB
         - Collabora
         - CAD / DWG
         - PostgreSQL
         - Nginx
-        - Сборка образа
-        - Другое
+        - Image build
+        - Other
     validations:
       required: true
   - type: input
     id: version
     attributes:
-      label: Версия Nextcloud
-      placeholder: "34.x, вывод occ status"
+      label: Nextcloud version
+      placeholder: "34.x, occ status output"
     validations:
       required: true
   - type: textarea
     id: expected
     attributes:
-      label: Ожидание
+      label: Expected
     validations:
       required: true
   - type: textarea
     id: actual
     attributes:
-      label: Факт
+      label: Actual
     validations:
       required: true
   - type: textarea
     id: steps
     attributes:
-      label: Как воспроизвести
-      placeholder: Команды и клики без секретов
+      label: How to reproduce
+      placeholder: Commands and clicks, no secrets
     validations:
       required: true
   - type: textarea
     id: checks
     attributes:
-      label: Уже проверено
-      placeholder: "occ status, compose ps, пункт матрицы из docs/deploy.md"
+      label: Already checked
+      placeholder: "occ status, compose ps, matrix item from docs/deploy.md"

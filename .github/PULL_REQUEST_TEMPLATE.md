@@ -1,14 +1,14 @@
-## Зачем
+## Why
 
-<!-- Одна-две фразы: что меняется для оператора или пользователя. -->
+<!-- One or two sentences: what changes for the operator or the user. -->
 
-## Что сделано
+## What changed
 
 -
 
-## Проверено
+## Checked
 
-- [ ] `docker compose config` проходит
-- [ ] Секреты, `files/`, дампы и стендовые nginx не в diff
-- [ ] Документация обновлена (`docs/README.md`, runbook, CAD — по смыслу)
-- [ ] Скрипт идемпотентен, `occ` от UID 33
+- [ ] `docker compose config` succeeds
+- [ ] Secrets, `files/`, dumps, and site-specific nginx are not in the diff
+- [ ] Documentation is updated (`docs/README.md`, runbook, CAD — as needed)
+- [ ] The script is idempotent; `occ` runs as UID 33

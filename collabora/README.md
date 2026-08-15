@@ -1,17 +1,17 @@
 # Collabora jail patch
 
-Образ `collabora/code` в Docker не проходит self-test mount (UID 65534). Compose монтирует обёртки из этой папки:
+The `collabora/code` image in Docker fails the mount self-test (UID 65534). Compose mounts wrappers from this directory:
 
-| Файл | Роль |
+| File | Role |
 |---|---|
-| `coolmount` | Self-test завершается успешно, остальное идёт в `coolmount.real` |
-| `coolmount.real` | Бинарник из образа Collabora |
-| `busybox` | `/bin/sh` для jail (в образе нет shell) |
-| `apply-caps.sh` | После смены образа CODE заново выставляет capabilities |
+| `coolmount` | Self-test succeeds; everything else goes to `coolmount.real` |
+| `coolmount.real` | Binary from the Collabora image |
+| `busybox` | `/bin/sh` for the jail (the image has no shell) |
+| `apply-caps.sh` | Re-applies capabilities after a CODE image change |
 
 ```bash
 ./collabora/apply-caps.sh
 docker compose up -d collabora
 ```
 
-Подробности: [docs/collabora.md](../docs/collabora.md).
+Details: [docs/collabora.md](../docs/collabora.md).

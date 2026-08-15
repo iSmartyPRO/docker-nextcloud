@@ -1,19 +1,19 @@
 # files_cad
 
-Приложение Nextcloud для строительных чертежей: превью DWG / DXF и запасной SVG-просмотр.
+A Nextcloud app for construction drawings: DWG / DXF thumbnails and a fallback SVG viewer.
 
-Клик по файлу в браузере даёт Universal File Viewer (`fileviewer`). Это приложение его не заменяет, а:
+Click-to-open in the browser is Universal File Viewer (`fileviewer`). This app does not replace it. It:
 
-- регистрирует превью через LibreDWG;
-- открывает `/apps/files_cad/view` как запасной экран;
-- командой `occ files_cad:configure-fileviewer` оставляет File Viewer только на CAD / BIM, чтобы офис остался в Collabora.
+- registers previews through LibreDWG;
+- opens `/apps/files_cad/view` as a fallback screen;
+- keeps File Viewer on CAD / BIM only via `occ files_cad:configure-fileviewer`, so office files stay in Collabora.
 
-Включается так:
+Enable it with:
 
 ```bash
 ./scripts/set-cad.sh
 ```
 
-Без `occ` (enable + MIME repair) клик по DWG предлагает сохранить файл.
+Without `occ` (enable + MIME repair), a click on DWG offers to save the file.
 
-Деплой на новый хост и ловушки: [docs/cad.md](../../docs/cad.md). Не копировать приложение в `files/apps`.
+Deploy on a new host and pitfalls: [docs/cad.md](../../docs/cad.md). Do not copy this app into `files/apps`.

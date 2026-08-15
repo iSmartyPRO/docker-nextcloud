@@ -1,5 +1,5 @@
-# Тема
+# Theming
 
-`logo.svg` подхватывает `scripts/set-theming.sh` и кладёт его в `files/themes/`.
+`logo.svg` is picked up by `scripts/set-theming.sh` and copied into `files/themes/`.
 
-Название, слоган, цвет и URL задаются переменными `THEMING_*` в `.env`.
+Name, slogan, color, and URL come from the `THEMING_*` variables in `.env`.

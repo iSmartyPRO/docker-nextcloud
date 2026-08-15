@@ -1,33 +1,33 @@
-# Безопасность
+# Security
 
-## Что не публикуется
+## What must not be published
 
-В git не должны попадать:
+Do not commit:
 
-- `.env` и любые файлы с паролями
-- каталог `files/` (webroot, `config.php`, данные пользователей)
-- `backups/` и дампы `*.sql`, `*.sql.gz`, `*.dump`
-- стендовые vhost’ы nginx с боевыми доменами
-- сертификаты `*.pem`, `*.key`, `*.crt`
+- `.env` or any file that holds passwords
+- the `files/` directory (webroot, `config.php`, user data)
+- `backups/` and dumps (`*.sql`, `*.sql.gz`, `*.dump`)
+- site-specific nginx vhosts with production hostnames
+- certificates (`*.pem`, `*.key`, `*.crt`)
 
-Образец переменных — только [`.env.sample`](.env.sample). Значения из sample на проде не использовать.
+The only sample is [`.env.sample`](.env.sample). Do not use sample values in production.
 
-## Сообщить об уязвимости
+## Report a vulnerability
 
-Не открывайте публичный issue с описанием, по которому можно получить доступ к чужим файлам, обойти LDAP или подменить WOPI.
+Do not open a public issue that would let someone reach other people’s files, bypass LDAP, or spoof WOPI.
 
-Напишите владельцу репозитория через GitHub Security Advisory или в приватном письме. В сообщении укажите:
+Contact the repository owner through a GitHub Security Advisory or a private message. Include:
 
-- затронутый компонент (`Nextcloud`, `files_cad`, `scripts`, `collabora`, nginx-образец);
-- версию образа / коммит;
-- шаги без боевых паролей и без данных пользователей;
-- ожидаемый и фактический результат.
+- the affected component (`Nextcloud`, `files_cad`, `scripts`, `collabora`, nginx sample);
+- image version / commit;
+- steps with no production passwords and no user data;
+- expected and actual result.
 
-Ответ — в разумный срок. Пока уязвимость не закрыта, детали не публикуем.
+You will get a reply in a reasonable time. Details stay private until the issue is fixed.
 
-## Эксплуатация
+## Operations
 
-- Nextcloud слушает только `DOCKER_PORT` на хосте. TLS терминирует внешний nginx.
-- Collabora ограничена 2 GiB RAM, Nextcloud — 1 GiB. Лимиты не снимать на хосте с 6 GiB памяти.
-- `COLLABORA_WOPI_HOST` — hostname облака без схемы. Чужой host в WOPI не допускать.
-- После `occ app:update --all` снова выполнить `occ files_cad:configure-fileviewer`, иначе офисные файлы может перехватить File Viewer.
+- Nextcloud listens only on `DOCKER_PORT` on the host. External nginx terminates TLS.
+- Collabora is capped at 2 GiB RAM, Nextcloud at 1 GiB. Do not lift the limits on a 6 GiB host.
+- `COLLABORA_WOPI_HOST` is the cloud hostname without a scheme. Do not allow a foreign host in WOPI.
+- After `occ app:update --all`, run `occ files_cad:configure-fileviewer` again, or File Viewer may take over office files.

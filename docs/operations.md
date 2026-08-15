@@ -1,6 +1,6 @@
-# Эксплуатация
+# Operations
 
-Все скрипты читают `.env` из корня репозитория. Запускайте их из любой директории:
+Every script reads `.env` from the repository root. Run them from any directory:
 
 ```bash
 ./scripts/apps-list.sh
@@ -14,21 +14,21 @@ docker exec -u 33 "$DOCKER_CONTAINER_NAME" php occ status
 docker exec -u 33 "$DOCKER_CONTAINER_NAME" php occ user:report
 ```
 
-Пользователь `www-data` в контейнере — UID 33.
+`www-data` in the container is UID 33.
 
-## Приложения
+## Apps
 
 ```bash
 ./scripts/apps-list.sh
 ./scripts/apps-enable.sh    # LDAP + files_external
-./scripts/set-cad.sh        # DWG/DXF просмотр и превью
-./scripts/apps-disable.sh   # выключить лишние штатные приложения
-./scripts/background-job.sh # окно фоновых задач
+./scripts/set-cad.sh        # DWG/DXF viewing and thumbnails
+./scripts/apps-disable.sh   # disable extra stock apps
+./scripts/background-job.sh # background-job window
 ```
 
-Пошаговое обновление с бэкапом и миграциями схемы: [deploy.md](deploy.md) (сценарий B).
+Step-by-step upgrade with backup and schema migrations: [deploy.md](deploy.md) (scenario B).
 
-## Обновление Nextcloud
+## Upgrade Nextcloud
 
 ```bash
 docker compose pull redis collabora
@@ -37,17 +37,17 @@ docker exec -u 33 "$DOCKER_CONTAINER_NAME" php occ upgrade
 docker exec -u 33 "$DOCKER_CONTAINER_NAME" php occ db:add-missing-indices
 ```
 
-`rebuild-image.sh` пересобирает `cloud-nextcloud:local` от актуального `nextcloud:latest` и сохраняет SMB и LibreDWG.
+`rebuild-image.sh` rebuilds `cloud-nextcloud:local` from the current `nextcloud:latest` and keeps SMB and LibreDWG.
 
-После `occ upgrade` ядро перезаписывает `files/core/` (иконки DWG и `mimetypelist.js`). Сразу:
+After `occ upgrade`, core overwrites `files/core/` (DWG icons and `mimetypelist.js`). Immediately:
 
 ```bash
 ./scripts/set-cad.sh
 ```
 
-Иначе `.dwg` снова станет серым файлом с диалогом сохранения. Подробности: [cad.md](cad.md).
+Otherwise `.dwg` becomes a grey file with a save dialog again. Details: [cad.md](cad.md).
 
-## Обновление Collabora
+## Upgrade Collabora
 
 ```bash
 docker compose pull collabora
@@ -56,13 +56,13 @@ docker compose up -d collabora
 ./scripts/set-collabora.sh
 ```
 
-## Бэкап
+## Backup
 
-Нужны три вещи:
+You need three things:
 
-1. Каталог `./files` (код, `config.php`, `data/`)
-2. Дамп PostgreSQL базы из `POSTGRES_DB`
-3. `.env` (хранить отдельно, не в git)
+1. The `./files` directory (code, `config.php`, `data/`)
+2. A PostgreSQL dump of `POSTGRES_DB`
+3. `.env` (store separately, not in git)
 
 ```bash
 set -a && source .env && set +a
@@ -71,4 +71,4 @@ docker exec "$POSTGRES_HOST" pg_dump -U "$POSTGRES_USER" "$POSTGRES_DB" \
   | gzip > "backups/${POSTGRES_DB}-$(date +%F).sql.gz"
 ```
 
-Каталог `backups/` в git не входит.
+`backups/` is not in git.

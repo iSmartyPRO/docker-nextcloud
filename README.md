@@ -2,7 +2,7 @@
 
 # docker-nextcloud
 
-**Корпоративное файловое облако на Nextcloud**
+**Corporate file cloud on Nextcloud**
 
 Active Directory · SMB · Collabora Online · PostgreSQL · DWG / DXF
 
@@ -12,31 +12,31 @@ Active Directory · SMB · Collabora Online · PostgreSQL · DWG / DXF
 [![Collabora](https://img.shields.io/badge/Collabora-Online-5c2d91?style=flat-square)](https://www.collaboraoffice.com)
 [![License](https://img.shields.io/badge/License-AGPL--3.0-red?style=flat-square)](LICENSE)
 
-[Документация](docs/README.md) · [Деплой](docs/deploy.md) · [Чертежи CAD](docs/cad.md) · [Безопасность](SECURITY.md)
+[Documentation](docs/README.md) · [Deploy](docs/deploy.md) · [CAD drawings](docs/cad.md) · [Security](SECURITY.md)
 
 </div>
 
 ---
 
-Стек для компании, которой нужно одно место для файлов, офисных документов и строительных чертежей. Пользователи входят через Active Directory, шары SMB открываются как обычные папки, Word и Excel правятся в браузере, DWG открывается кликом — без диалога «Сохранить файл».
+A stack for a company that needs one place for files, office documents, and construction drawings. Users sign in through Active Directory, SMB shares appear as normal folders, Word and Excel open in the browser, and a DWG opens on click — no “Save file” dialog.
 
-Образ Nextcloud собирается из [`Dockerfile`](Dockerfile): в него вшиты SMB-клиент и LibreDWG. Голый `nextcloud:latest` для этого стека не подходит.
+The Nextcloud image is built from the [`Dockerfile`](Dockerfile): SMB client and LibreDWG are baked in. A plain `nextcloud:latest` image is not enough for this stack.
 
-## Возможности
+## Features
 
 | | |
 |---|---|
-| **Каталог и доступ** | LDAP / Active Directory, внешние шары SMB/CIFS, квоты, HTTPS за reverse proxy |
-| **Документы** | Collabora Online для DOCX, XLSX, PPTX. OnlyOffice в стеке нет |
-| **Чертежи** | Просмотр DWG / DXF / DWF / IFC в браузере, иконки AutoCAD, миниатюры через LibreDWG |
-| **Данные** | Внешний PostgreSQL 14–18, Redis для кэша и блокировок |
-| **Эксплуатация** | Идемпотентные `occ`-обёртки, runbook на новый сервер, обновление и перенос |
+| **Directory and access** | LDAP / Active Directory, external SMB/CIFS shares, quotas, HTTPS behind a reverse proxy |
+| **Documents** | Collabora Online for DOCX, XLSX, PPTX. OnlyOffice is not in the stack |
+| **Drawings** | In-browser DWG / DXF / DWF / IFC, AutoCAD icons, thumbnails via LibreDWG |
+| **Data** | External PostgreSQL 14–18, Redis for cache and file locks |
+| **Operations** | Idempotent `occ` wrappers, runbook for a new host, upgrades, and moves |
 
-## Архитектура
+## Architecture
 
 ```mermaid
 flowchart LR
-  U[Браузер] --> NGX[Nginx · TLS]
+  U[Browser] --> NGX[Nginx · TLS]
 
   NGX --> NC[Nextcloud]
   NGX --> CO[Collabora CODE]
@@ -48,90 +48,90 @@ flowchart LR
   NC --> CAD[files_cad + File Viewer]
 ```
 
-| Сервис | Образ | Роль |
+| Service | Image | Role |
 |---|---|---|
-| Nextcloud | `cloud-nextcloud:local` | Файлы, LDAP, SMB, MIME и превью DWG |
-| Redis | `redis:alpine` | Кэш и блокировки файлов |
-| Collabora | `collabora/code` | Онлайн-редактор документов |
-| PostgreSQL | внешний, сеть `docker-lan` | Единственная СУБД стека |
+| Nextcloud | `cloud-nextcloud:local` | Files, LDAP, SMB, DWG MIME and thumbnails |
+| Redis | `redis:alpine` | Cache and file locks |
+| Collabora | `collabora/code` | Online document editor |
+| PostgreSQL | external, `docker-lan` | The only database in the stack |
 
-Nginx и SSL в этот репозиторий не входят — только образцы в [`nginx/`](nginx/).
+Nginx and TLS are not part of this repository — samples only, in [`nginx/`](nginx/).
 
-## Быстрый старт
+## Quick start
 
-Нужны Docker 24+, Compose v2, сеть `docker-lan` и PostgreSQL 14–18. Для Nextcloud вместе с Collabora удобно иметь от 6 GiB RAM.
+You need Docker 24+, Compose v2, the `docker-lan` network, and PostgreSQL 14–18. Nextcloud plus Collabora is comfortable from about 6 GiB RAM.
 
 ```bash
-docker network create docker-lan   # если сети ещё нет
-cp .env.sample .env                # заполните значения, не оставляйте sample
+docker network create docker-lan   # skip if the network already exists
+cp .env.sample .env                # fill in real values, do not keep the sample
 docker compose build
 docker compose up -d
 ./scripts/set-basics.sh
 ```
 
-Дальше — по порядку, без пропусков:
+Then, in this order, with no skips:
 
 ```bash
 ./scripts/set-theming.sh
 ./scripts/apps-enable.sh
 ./scripts/set-ldap.sh
 ./scripts/set-collabora.sh
-./scripts/set-cad.sh               # иначе .dwg скачается как неизвестный файл
+./scripts/set-cad.sh               # otherwise .dwg downloads as an unknown file
 ```
 
-Полный runbook: [docs/deploy.md](docs/deploy.md). Ловушки DWG: [docs/cad.md](docs/cad.md).
+Full runbook: [docs/deploy.md](docs/deploy.md). DWG pitfalls: [docs/cad.md](docs/cad.md).
 
-## Репозиторий
+## Repository
 
 ```
 ├── docker-compose.yml
 ├── Dockerfile                 # Nextcloud + SMB + LibreDWG
-├── .env.sample                # секреты только в локальном .env
-├── docs/                      # документация и runbook
-├── nginx/                     # образцы reverse proxy
-├── collabora/                 # jail-patch для CODE
-├── apps/files_cad/            # превью и запасной просмотр DWG/DXF
-├── cad/                       # MIME-типы чертежей
-├── scripts/                   # occ-обёртки
-├── theming/                   # логотип
-└── files/                     # данные инстанса, не в git
+├── .env.sample                # secrets belong only in the local .env
+├── docs/                      # documentation and runbook
+├── nginx/                     # reverse-proxy samples
+├── collabora/                 # jail patch for CODE
+├── apps/files_cad/            # DWG/DXF thumbnails and fallback viewer
+├── cad/                       # drawing MIME types
+├── scripts/                   # occ wrappers
+├── theming/                   # logo
+└── files/                     # instance data, not in git
 ```
 
-В git не попадают `.env`, `files/`, `backups/` и стендовые vhost’ы nginx.
+Git does not include `.env`, `files/`, `backups/`, or site-specific nginx vhosts.
 
-## Скрипты
+## Scripts
 
-| Скрипт | Назначение |
+| Script | Purpose |
 |---|---|
-| `scripts/set-basics.sh` | HTTPS, квота, почта, индексы |
-| `scripts/set-theming.sh` | Название, слоган, цвет, логотип |
+| `scripts/set-basics.sh` | HTTPS, quota, mail, indexes |
+| `scripts/set-theming.sh` | Name, slogan, color, logo |
 | `scripts/set-ldap.sh` | LDAP / Active Directory |
-| `scripts/test-ldap.sh` | Проверка LDAP без записи настроек |
-| `scripts/set-collabora.sh` | Привязка Collabora Online |
-| `scripts/set-cad.sh` | Просмотр DWG / DXF |
-| `scripts/apps-enable.sh` | LDAP и внешние хранилища |
-| `scripts/apps-disable.sh` | Выключить лишние штатные приложения |
-| `scripts/rebuild-image.sh` | Пересобрать образ со SMB и LibreDWG |
-| `collabora/apply-caps.sh` | Capabilities после смены образа CODE |
+| `scripts/test-ldap.sh` | LDAP check without writing settings |
+| `scripts/set-collabora.sh` | Bind Collabora Online |
+| `scripts/set-cad.sh` | DWG / DXF viewing |
+| `scripts/apps-enable.sh` | LDAP and external storage |
+| `scripts/apps-disable.sh` | Disable extra stock apps |
+| `scripts/rebuild-image.sh` | Rebuild the image with SMB and LibreDWG |
+| `collabora/apply-caps.sh` | Capabilities after a CODE image change |
 
-## Документация
+## Documentation
 
-| Раздел | Когда открывать |
+| Page | When to open it |
 |---|---|
-| [Обзор](docs/README.md) | Навигация по всем страницам |
-| [Деплой](docs/deploy.md) | Новый сервер, обновление, перенос, смена СУБД |
-| [Установка](docs/install.md) | Требования и первый запуск |
-| [Конфигурация](docs/configuration.md) | Переменные `.env` |
-| [CAD](docs/cad.md) | Чертежи: MIME, иконки, «Сохранить файл» |
-| [Эксплуатация](docs/operations.md) | occ, бэкап, обновление |
-| [Неполадки](docs/troubleshooting.md) | Типичные сбои и что не чинить |
+| [Overview](docs/README.md) | Index of every page |
+| [Deploy](docs/deploy.md) | New host, upgrade, move, database change |
+| [Install](docs/install.md) | Requirements and first start |
+| [Configuration](docs/configuration.md) | `.env` variables |
+| [CAD](docs/cad.md) | Drawings: MIME, icons, “Save file” |
+| [Operations](docs/operations.md) | occ, backup, upgrades |
+| [Troubleshooting](docs/troubleshooting.md) | Common failures and what not to “fix” |
 
-## Безопасность
+## Security
 
-Секреты живут только в `.env` на хосте. Не коммитьте пароли, дампы и каталог `files/`. Как сообщать об уязвимости — в [SECURITY.md](SECURITY.md).
+Secrets live only in `.env` on the host. Do not commit passwords, dumps, or `files/`. How to report a vulnerability: [SECURITY.md](SECURITY.md).
 
-Collabora в этом стеке — **CODE** (Development Edition). Для крупного офиса нужна коммерческая лицензия Collabora Online.
+Collabora in this stack is **CODE** (Development Edition). A large office needs a commercial Collabora Online license.
 
-## Лицензия
+## License
 
-[GNU Affero General Public License v3.0](LICENSE) — как у Nextcloud и приложения `files_cad`.
+[GNU Affero General Public License v3.0](LICENSE) — same as Nextcloud and the `files_cad` app.

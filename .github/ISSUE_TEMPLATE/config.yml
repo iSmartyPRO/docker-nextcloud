@@ -1,14 +1,14 @@
 blank_issues_enabled: false
 contact_links:
-  - name: Документация
+  - name: Documentation
     url: https://github.com/iSmartyPRO/docker-nextcloud/blob/main/docs/README.md
-    about: Сначала откройте обзор и нужный раздел
-  - name: Runbook деплоя
+    about: Start with the overview and the page you need
+  - name: Deploy runbook
     url: https://github.com/iSmartyPRO/docker-nextcloud/blob/main/docs/deploy.md
-    about: Новый сервер, обновление, перенос, смена СУБД
-  - name: Чертежи DWG / DXF
+    about: New host, upgrade, move, database change
+  - name: DWG / DXF drawings
     url: https://github.com/iSmartyPRO/docker-nextcloud/blob/main/docs/cad.md
-    about: Серая иконка, «Сохранить файл», File Viewer
-  - name: Неполадки
+    about: Grey icon, “Save file”, File Viewer
+  - name: Troubleshooting
     url: https://github.com/iSmartyPRO/docker-nextcloud/blob/main/docs/troubleshooting.md
-    about: Логин, SMB, Collabora, OOM, база
+    about: Login, SMB, Collabora, OOM, database

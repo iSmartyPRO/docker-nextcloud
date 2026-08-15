@@ -1,45 +1,45 @@
-# Установка
+# Install
 
-Короткий путь до первого входа. Полный runbook (новый сервер, обновление, перенос, смена СУБД): [deploy.md](deploy.md).
+Short path to the first login. Full runbook (new host, upgrade, move, database change): [deploy.md](deploy.md).
 
-## Требования
+## Requirements
 
-- Docker 24+ и Docker Compose v2
-- Внешняя сеть `docker-lan`
-- PostgreSQL (отдельный контейнер в той же сети)
-- 4 vCPU и от 6 GiB RAM, если вместе крутятся Nextcloud и Collabora. Для просмотра DWG в браузере отдельная RAM на сервере не нужна.
-- Свободный диск: данные живут в `./files`
+- Docker 24+ and Docker Compose v2
+- External network `docker-lan`
+- PostgreSQL (a separate container on the same network)
+- 4 vCPU and at least 6 GiB RAM if Nextcloud and Collabora run together. In-browser DWG viewing does not need extra server RAM.
+- Free disk: data lives in `./files`
 
-## Сеть
+## Network
 
 ```bash
 docker network create docker-lan
 ```
 
-Compose подключает сервисы к уже существующей сети `docker-lan`.
+Compose attaches services to the existing `docker-lan` network.
 
-## Первый запуск
+## First start
 
 ```bash
 cp .env.sample .env
-# заполните пароли, домены, LDAP, Postgres
+# fill in passwords, domains, LDAP, Postgres
 
 docker compose build
 docker compose up -d
 ```
 
-Образ Nextcloud собирается локально (`cloud-nextcloud:local`): в него вшиты SMB и LibreDWG (миниатюры DWG). Просмотр чертежей кликом включает `./scripts/set-cad.sh` — без него `.dwg` скачивается как неизвестный файл. Тонкости: [cad.md](cad.md).
+The Nextcloud image is built locally (`cloud-nextcloud:local`) with SMB and LibreDWG (DWG thumbnails). Click-to-view is enabled by `./scripts/set-cad.sh` — without it, `.dwg` downloads as an unknown file. Details: [cad.md](cad.md).
 
-Создайте в PostgreSQL отдельную базу и роль (не используйте чужую БД):
+Create a dedicated PostgreSQL role and database (do not reuse someone else’s database):
 
 ```sql
 CREATE ROLE nextcloud LOGIN PASSWORD 'strong-password';
 CREATE DATABASE nextcloud OWNER nextcloud ENCODING 'UTF8' TEMPLATE template0;
 ```
 
-Имена и пароль должны совпадать с `POSTGRES_*` в `.env`.
+Names and password must match `POSTGRES_*` in `.env`.
 
-После первого старта:
+After the first start:
 
 ```bash
 ./scripts/set-basics.sh
@@ -50,12 +50,12 @@ CREATE DATABASE nextcloud OWNER nextcloud ENCODING 'UTF8' TEMPLATE template0;
 ./scripts/set-cad.sh
 ```
 
-После `set-cad.sh` в браузере **Ctrl+F5**, затем открыть пробный `.dwg`: красная иконка AutoCAD, клик не предлагает «Сохранить». docx должен остаться в Collabora.
+After `set-cad.sh`, hard-refresh the browser (**Ctrl+F5**), then open a sample `.dwg`: red AutoCAD icon, click does not offer “Save”. A docx must stay in Collabora.
 
-## Остановка
+## Stop
 
 ```bash
 docker compose down
 ```
 
-Том `./files` и база PostgreSQL не удаляются.
+The `./files` volume and the PostgreSQL database are not removed.

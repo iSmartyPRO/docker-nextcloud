@@ -1,35 +1,35 @@
-# Устранение неполадок
+# Troubleshooting
 
-## Не логинится с первого раза
+## Login does not work on the first try
 
-Ошибка CSP `form-action 'self'`. Выставьте `overwriteprotocol=https` (`./scripts/set-basics.sh`) и проверьте, что nginx передаёт `X-Forwarded-Proto`.
+CSP error `form-action 'self'`. Set `overwriteprotocol=https` (`./scripts/set-basics.sh`) and confirm nginx sends `X-Forwarded-Proto`.
 
-## SMB-шара пустая или «storage not available»
+## SMB share is empty or “storage not available”
 
-1. В контейнере должны быть модули: `docker exec $DOCKER_CONTAINER_NAME php -m | grep smb`
-2. Если их нет — образ собрали не из `Dockerfile`. Запустите `./scripts/rebuild-image.sh`
-3. Для шары с логином пользователя проверка из CLI не сработает — войдите в веб
+1. The container must have the modules: `docker exec $DOCKER_CONTAINER_NAME php -m | grep smb`
+2. If they are missing, the image was not built from the `Dockerfile`. Run `./scripts/rebuild-image.sh`
+3. For a share that uses the user’s login, a CLI check will not work — sign in through the web UI
 
-## Collabora не открывает документ
+## Collabora does not open a document
 
-- `curl -sk https://collabora.example.com/hosting/discovery` должен вернуть XML
-- `occ richdocuments:activate-config` без ошибок
-- В `.env` `COLLABORA_WOPI_HOST` совпадает с hostname облака
-- nginx проксирует `/browser`, `/cool`, `/hosting` с WebSocket
-- После смены образа Collabora: `./collabora/apply-caps.sh`
-- Если вместо Collabora открылся File Viewer — `occ files_cad:configure-fileviewer`
+- `curl -sk https://collabora.example.com/hosting/discovery` must return XML
+- `occ richdocuments:activate-config` with no errors
+- In `.env`, `COLLABORA_WOPI_HOST` matches the cloud hostname
+- nginx proxies `/browser`, `/cool`, `/hosting` with WebSocket
+- After a Collabora image change: `./collabora/apply-caps.sh`
+- If File Viewer opened instead of Collabora: `occ files_cad:configure-fileviewer`
 
-## Nextcloud в maintenance
+## Nextcloud is in maintenance
 
 ```bash
 docker exec -u 33 "$DOCKER_CONTAINER_NAME" php occ maintenance:mode --off
 ```
 
-## DWG: окно «Сохранить файл» или серая иконка
+## DWG: “Save file” dialog or a grey icon
 
-Это не «файл битый». Ядро Nextcloud не знает `.dwg`, пока не выполнен CAD-деплой. Полный разбор: [cad.md](cad.md).
+This is not a “corrupt file”. Nextcloud core does not know `.dwg` until the CAD deploy is done. Full write-up: [cad.md](cad.md).
 
-Быстрая проверка (подставить имя контейнера из `.env`):
+Quick check (use the container name from `.env`):
 
 ```bash
 set -a && source .env && set +a
@@ -38,27 +38,27 @@ docker exec -u 33 "$DOCKER_CONTAINER_NAME" php occ app:list | grep -E 'files_cad
 docker exec "$DOCKER_CONTAINER_NAME" test -f /var/www/html/core/img/filetypes/application-dwg.svg && echo icon_ok
 ```
 
-| Симптом | Что сделать |
+| Symptom | What to do |
 |---|---|
-| `app_mounted` нет | `docker compose up -d nextcloud` — том `./apps/files_cad` не подключён |
-| Нет `files_cad` / `fileviewer` в app:list | `./scripts/set-cad.sh` |
-| Иконка серая после скрипта | Ctrl+F5; снова `occ maintenance:mimetype:update-js` |
-| Клик всё ещё «Сохранить» | `occ maintenance:mimetype:update-db --repair-filecache` — старые файлы (и SMB) остались `octet-stream` |
-| docx открылся не в Collabora | `occ files_cad:configure-fileviewer` |
-| Нет `dwg2SVG`, но чертёж открывается | Так и должно быть. Конвертер только для миниатюр: `./scripts/rebuild-image.sh` |
-| План этажа «каша» на общем виде | Нормальный плотный DWG. Приблизить, слои, PDF. Не чинить деплой |
+| No `app_mounted` | `docker compose up -d nextcloud` — the `./apps/files_cad` volume is not attached |
+| No `files_cad` / `fileviewer` in app:list | `./scripts/set-cad.sh` |
+| Icon still grey after the script | Ctrl+F5; run `occ maintenance:mimetype:update-js` again |
+| Click still says “Save” | `occ maintenance:mimetype:update-db --repair-filecache` — old files (and SMB) stayed `octet-stream` |
+| docx opened outside Collabora | `occ files_cad:configure-fileviewer` |
+| No `dwg2SVG`, but the drawing opens | Expected. The converter is only for thumbnails: `./scripts/rebuild-image.sh` |
+| Floor plan looks messy at full view | Normal dense DWG. Zoom, layers, PDF. Do not “fix” the deploy |
 
-Не копировать приложение в `files/apps`. Не править `mimetypemapping.dist.json`.
+Do not copy the app into `files/apps`. Do not edit `mimetypemapping.dist.json`.
 
-После `occ upgrade` ядро затирает `files/core/img/filetypes` и `mimetypelist.js` — снова `./scripts/set-cad.sh` и Ctrl+F5.
+After `occ upgrade`, core overwrites `files/core/img/filetypes` and `mimetypelist.js` — run `./scripts/set-cad.sh` again and Ctrl+F5.
 
-## Контейнер убит по OOM
+## Container killed by OOM
 
-У Nextcloud лимит 1 GiB, у Collabora — 2 GiB. Смотрите `docker inspect` → `OOMKilled`. Не снимайте лимиты на хосте с 6 GiB RAM.
+Nextcloud is limited to 1 GiB, Collabora to 2 GiB. Check `docker inspect` → `OOMKilled`. Do not lift the limits on a 6 GiB RAM host.
 
-## База не подключается
+## Database will not connect
 
-Контейнер Postgres должен быть в сети `docker-lan`, имя хоста — как `POSTGRES_HOST`. Проверка из Nextcloud:
+The Postgres container must be on `docker-lan`. The hostname must match `POSTGRES_HOST`. Check from Nextcloud:
 
 ```bash
 docker exec "$DOCKER_CONTAINER_NAME" php -r \

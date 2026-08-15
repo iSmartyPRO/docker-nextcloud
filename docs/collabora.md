@@ -1,20 +1,20 @@
 # Collabora Online
 
-Редактор документов (CODE) в контейнере `${DOCKER_CONTAINER_NAME}_collabora`. OnlyOffice в стеке больше нет.
+Document editor (CODE) in the `${DOCKER_CONTAINER_NAME}_collabora` container. OnlyOffice is no longer in the stack.
 
-## Запуск
+## Start
 
-1. Заполните `COLLABORA_*` и `NEXTCLOUD_URL` в `.env`.
-2. `COLLABORA_WOPI_HOST` — hostname облака без схемы, например `cloud.example.com`.
-3. Поднимите сервис: `docker compose up -d collabora`.
-4. Настройте nginx (см. [nginx.md](nginx.md)).
-5. Привяжите к Nextcloud:
+1. Fill `COLLABORA_*` and `NEXTCLOUD_URL` in `.env`.
+2. `COLLABORA_WOPI_HOST` is the cloud hostname without a scheme, for example `cloud.example.com`.
+3. Start the service: `docker compose up -d collabora`.
+4. Configure nginx (see [nginx.md](nginx.md)).
+5. Bind it to Nextcloud:
 
 ```bash
 ./scripts/set-collabora.sh
 ```
 
-Проверка:
+Check:
 
 ```bash
 curl -sk https://collabora.example.com/hosting/capabilities
@@ -23,15 +23,15 @@ docker exec -u 33 "$DOCKER_CONTAINER_NAME" php occ richdocuments:activate-config
 
 ## Jail patch
 
-Образ CODE в Docker падает на self-test mount. Файлы в `collabora/` монтируются в контейнер (см. `collabora/README.md`).
+The CODE image in Docker fails the mount self-test. Files in `collabora/` are mounted into the container (see `collabora/README.md`).
 
-После обновления образа Collabora:
+After a Collabora image update:
 
 ```bash
 ./collabora/apply-caps.sh
 docker compose up -d collabora
 ```
 
-## Ресурсы
+## Resources
 
-Лимит контейнера — 2 GiB RAM, swap отключён. На 2–4 одновременных документа этого достаточно. При упоре в лимит пострадает только Collabora, не весь хост.
+The container limit is 2 GiB RAM, swap off. That is enough for 2–4 documents at once. If the limit is hit, only Collabora suffers, not the whole host.

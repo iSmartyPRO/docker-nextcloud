@@ -1,23 +1,23 @@
-# Скрипты
+# Scripts
 
-Запускаются из любой директории. Общий загрузчик `.env`: [`lib/common.sh`](lib/common.sh).
+Run from any directory. Shared `.env` loader: [`lib/common.sh`](lib/common.sh).
 
-`occ` внутри скриптов всегда идёт от UID 33 (`www-data`).
+`occ` inside the scripts always runs as UID 33 (`www-data`).
 
-| Скрипт | Когда |
+| Script | When |
 |---|---|
-| `set-basics.sh` | Первый запуск: HTTPS, квота, почта, индексы |
-| `set-theming.sh` | Тема и логотип |
-| `set-ldap.sh` | Запись LDAP / AD |
-| `test-ldap.sh` | Проверка LDAP без записи |
-| `set-collabora.sh` | Привязка Collabora |
-| `set-cad.sh` | Каждый новый хост и после `occ upgrade` |
-| `apps-enable.sh` | LDAP + внешние хранилища |
-| `apps-disable.sh` | Только по явной просьбе: гасит много штатных приложений |
-| `rebuild-image.sh` | Смена базового `nextcloud:latest` |
-| `apps-list.sh` | Список приложений |
-| `background-job.sh` | Окно фоновых задач |
+| `set-basics.sh` | First start: HTTPS, quota, mail, indexes |
+| `set-theming.sh` | Theme and logo |
+| `set-ldap.sh` | Write LDAP / AD |
+| `test-ldap.sh` | LDAP check without writing |
+| `set-collabora.sh` | Bind Collabora |
+| `set-cad.sh` | Every new host and after `occ upgrade` |
+| `apps-enable.sh` | LDAP + external storage |
+| `apps-disable.sh` | Only when explicitly asked: turns off many stock apps |
+| `rebuild-image.sh` | After the base `nextcloud:latest` changes |
+| `apps-list.sh` | List apps |
+| `background-job.sh` | Background-job window |
 
-Чертежи: без `set-cad.sh` клик по `.dwg` предлагает сохранить файл. Разбор: [docs/cad.md](../docs/cad.md).
+Drawings: without `set-cad.sh`, a click on `.dwg` offers to save the file. Write-up: [docs/cad.md](../docs/cad.md).
 
-Эксплуатация: [docs/operations.md](../docs/operations.md).
+Operations: [docs/operations.md](../docs/operations.md).

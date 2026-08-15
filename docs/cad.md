@@ -1,44 +1,44 @@
-# Чертежи CAD (DWG / DXF)
+# CAD drawings (DWG / DXF)
 
-Облако хранит, расшаривает и **открывает в браузере** строительные чертежи AutoCAD. Редактор документов — Collabora: офисные файлы CAD-просмотрщик не перехватывает.
+The cloud stores, shares, and **opens in the browser** AutoCAD construction drawings. The document editor is Collabora: the CAD viewer does not intercept office files.
 
-Полный деплой стека: [deploy.md](deploy.md). Эта страница — обязательное чтение перед включением DWG на **новом компьютере**. Без шагов ниже клик по `.dwg` даёт окно «Сохранить файл», иконка остаётся серой.
+Full stack deploy: [deploy.md](deploy.md). Read this page before you enable DWG on a **new machine**. Without the steps below, a click on `.dwg` opens a “Save file” dialog and the icon stays grey.
 
 ---
 
-## Что получает пользователь
+## What the user gets
 
-| Действие | Как |
+| Action | How |
 |---|---|
-| Загрузить `.dwg` / `.dxf` / `.dwf` | Как любой файл, в том числе с SMB-шары |
-| Узнать DWG в списке | Красная «A» AutoCAD и подпись DWG; DXF — жёлтая |
-| Открыть чертёж | Клик → просмотр в браузере (не диалог сохранения) |
-| Превью-миниатюра | Только если в образе есть LibreDWG (`dwg2SVG`) |
-| Редактировать | Скачать → AutoCAD / nanoCAD / КОМПАС |
-| IFC (BIM) | Тот же browser-viewer |
+| Upload `.dwg` / `.dxf` / `.dwf` | Like any other file, including from an SMB share |
+| Recognize DWG in the list | Red AutoCAD “A” and a DWG label; DXF is yellow |
+| Open a drawing | Click → view in the browser (not a save dialog) |
+| List thumbnail | Only if the image has LibreDWG (`dwg2SVG`) |
+| Edit | Download → AutoCAD / nanoCAD / KOMPAS |
+| IFC (BIM) | Same browser viewer |
 
-Collabora / LibreOffice для DWG **не** использовать: импорт чертежей там слабый.
+Do **not** use Collabora / LibreOffice for DWG: their drawing import is weak.
 
 ---
 
-## Состав
+## Components
 
-| Компонент | Где | Роль |
+| Component | Where | Role |
 |---|---|---|
-| `fileviewer` (Universal File Viewer) | App Store, ставит `set-cad.sh` | Клик по DWG/DXF: WebGL в браузере |
-| `files_cad` | репозиторий `apps/files_cad` | MIME, иконки, запасной просмотр, `occ files_cad:configure-fileviewer` |
-| `cad/mimetypemapping.json` | репозиторий | Расширения → MIME |
-| `cad/mimetypealiases.json` | репозиторий | MIME → имя иконки |
-| LibreDWG + `rsvg-convert` | образ `cloud-nextcloud:local` | Миниатюры в списке, не сам просмотр |
-| Collabora | как раньше | docx / xlsx / pptx |
+| `fileviewer` (Universal File Viewer) | App Store, installed by `set-cad.sh` | Click DWG/DXF: WebGL in the browser |
+| `files_cad` | repository `apps/files_cad` | MIME, icons, fallback viewer, `occ files_cad:configure-fileviewer` |
+| `cad/mimetypemapping.json` | repository | Extension → MIME |
+| `cad/mimetypealiases.json` | repository | MIME → icon name |
+| LibreDWG + `rsvg-convert` | image `cloud-nextcloud:local` | List thumbnails, not the viewer itself |
+| Collabora | as before | docx / xlsx / pptx |
 
-Исходник приложения в git — **`apps/files_cad`**. Каталог `files/` в git не входит.
+The app source in git is **`apps/files_cad`**. The `files/` directory is not in git.
 
 ---
 
-## Деплой на другом компьютере (обязательный порядок)
+## Deploy on another machine (required order)
 
-Корень репозитория = `$ROOT`. Сначала поднять стек по [deploy.md](deploy.md) сценарий A до `installed: true`, затем:
+Repository root = `$ROOT`. First bring the stack up with [deploy.md](deploy.md) scenario A until `installed: true`, then:
 
 ```bash
 cd "$ROOT"
@@ -47,47 +47,47 @@ NC="$DOCKER_CONTAINER_NAME"
 OCC="docker exec -u 33 $NC php occ"
 ```
 
-### 1. Контейнер должен видеть приложение
+### 1. The container must see the app
 
-В `docker-compose.yml` есть том:
+`docker-compose.yml` has this volume:
 
 ```yaml
 - ./apps/files_cad:/var/www/html/custom_apps/files_cad:ro
 ```
 
-После `git clone` / правки compose **пересоздать** контейнер, иначе том не подключится (старый контейнер живёт со старыми mounts):
+After `git clone` or a compose edit, **recreate** the container. Otherwise the volume does not attach (the old container keeps old mounts):
 
 ```bash
 docker compose up -d nextcloud
 docker exec "$NC" test -f /var/www/html/custom_apps/files_cad/appinfo/info.xml && echo OK
 ```
 
-Если `OK` нет — остановиться. Не копировать приложение в `files/apps` (сотрётся при `occ upgrade`).
+If there is no `OK` — stop. Do not copy the app into `files/apps` (`occ upgrade` will wipe it).
 
-### 2. Включить CAD (не пропускать)
+### 2. Enable CAD (do not skip)
 
-Положить файлы на диск **мало**. Nextcloud не откроет DWG, пока не выполнятся `occ`:
+Putting files on disk is **not enough**. Nextcloud will not open DWG until these `occ` steps run:
 
 ```bash
 ./scripts/set-cad.sh
 ```
 
-Скрипт делает всё ниже. Если его нет под рукой — те же шаги вручную:
+The script does everything below. If you do not have it, the same steps by hand:
 
 ```bash
 $OCC app:enable files_cad
 $OCC app:install fileviewer || true
 $OCC app:enable fileviewer
 $OCC files_cad:configure-fileviewer
-# MIME из репозитория → files/config/
-# иконки → files/core/img/filetypes/
+# MIME from the repo → files/config/
+# icons → files/core/img/filetypes/
 $OCC maintenance:mimetype:update-db --repair-filecache
 $OCC maintenance:mimetype:update-js
 ```
 
-`fileviewer` качается с App Store — на хосте нужен выход в интернет. Нужен Nextcloud **33+** (этот стек — 34).
+`fileviewer` is downloaded from the App Store — the host needs outbound internet. Nextcloud **33+** is required (this stack is 34).
 
-Владелец файлов приложения, если копировали руками: UID **33** (`www-data`), не root.
+If you copied app files by hand, the owner is UID **33** (`www-data`), not root.
 
 ```bash
 chown -R 33:33 files/custom_apps/files_cad \
@@ -95,162 +95,162 @@ chown -R 33:33 files/custom_apps/files_cad \
   files/config/mimetypealiases.json
 ```
 
-### 3. Проверка в браузере
+### 3. Check in the browser
 
-1. Жёсткое обновление: **Ctrl+F5** (иначе кэш старого `mimetypelist.js` и серая иконка).
-2. Открыть папку с `.dwg` (локальную или SMB).
-3. Иконка — красная «A» + DWG, не серый документ.
-4. Клик открывает чертёж, не «Сохранить файл».
-5. Открыть docx — должен быть Collabora, не File Viewer.
+1. Hard refresh: **Ctrl+F5** (otherwise a cached `mimetypelist.js` and a grey icon).
+2. Open a folder with a `.dwg` (local or SMB).
+3. The icon is a red “A” + DWG, not a grey document.
+4. A click opens the drawing, not “Save file”.
+5. Open a docx — it must be Collabora, not File Viewer.
 
 ```bash
 $OCC app:list | grep -E 'files_cad|fileviewer|richdocuments'
 docker exec "$NC" test -f /var/www/html/core/img/filetypes/application-dwg.svg && echo icons_ok
 ```
 
-Миниатюра в списке — необязательна. Для неё:
+A list thumbnail is optional. For thumbnails:
 
 ```bash
 ./scripts/rebuild-image.sh
 docker exec "$NC" sh -c 'command -v dwg2SVG || command -v dwg2svg'
 ```
 
-Просмотр кликом от LibreDWG **не** зависит.
+Click-to-view does **not** depend on LibreDWG.
 
 ---
 
-## Ловушки (уже ловили на стенде)
+## Pitfalls (already seen on a live instance)
 
-Зафиксировано на живом инстансе. На новом хосте повторять те же ошибки не нужно.
+Recorded on a running instance. A new host does not need to repeat the same mistakes.
 
-### Клик по DWG открывает «Сохранить файл»
+### A click on DWG opens “Save file”
 
-Ядро Nextcloud **не знает** расширение `.dwg`. Без наших MIME файл в `oc_filecache` остаётся `application/octet-stream`. Для «неизвестного» бинарника UI всегда предлагает скачать.
+Nextcloud core **does not know** the `.dwg` extension. Without our MIME mapping the file stays `application/octet-stream` in `oc_filecache`. For an “unknown” binary the UI always offers a download.
 
-Нужны **все** пункты:
+You need **all** of these:
 
-1. `files/config/mimetypemapping.json` — `"dwg": ["image/vnd.dwg"]` (не править `resources/config/mimetypemapping.dist.json`: его затрёт обновление ядра).
-2. `$OCC maintenance:mimetype:update-db --repair-filecache` — иначе **уже лежащие** DWG (в том числе на SMB) остаются со старым MIME. На стенде после команды было: `Updated 2 filecache rows for mimetype "image/vnd.dwg"`.
-3. Включён `files_cad` **и/или** `fileviewer`. Файлы в `custom_apps/files_cad` без `app:enable` не работают.
-4. Ctrl+F5 после смены MIME.
+1. `files/config/mimetypemapping.json` — `"dwg": ["image/vnd.dwg"]` (do not edit `resources/config/mimetypemapping.dist.json`: a core upgrade overwrites it).
+2. `$OCC maintenance:mimetype:update-db --repair-filecache` — otherwise **already stored** DWG files (including on SMB) keep the old MIME. On the lab host the command reported: `Updated 2 filecache rows for mimetype "image/vnd.dwg"`.
+3. `files_cad` **and/or** `fileviewer` enabled. Files in `custom_apps/files_cad` do nothing without `app:enable`.
+4. Ctrl+F5 after a MIME change.
 
-Проверка типа конкретного файла (имя подставить своё):
+Check a specific file (substitute the name):
 
 ```bash
-$OCC files:scan --path="<user>/files/..."   # только если filecache точно устарел
+$OCC files:scan --path="<user>/files/..."   # only if filecache is definitely stale
 ```
 
-Или смотреть MIME в веб: свойства файла. Должно быть `image/vnd.dwg` / AutoCAD drawing, не «Unknown».
+Or look at MIME in the web UI: file properties. It must be `image/vnd.dwg` / AutoCAD drawing, not “Unknown”.
 
-### Серая иконка вместо AutoCAD
+### Grey icon instead of AutoCAD
 
-Иконка берётся не из расширения, а из цепочки MIME → alias → SVG → JS-список.
+The icon comes from the chain MIME → alias → SVG → JS list, not from the extension.
 
-| Кусок | Куда | Имя |
+| Piece | Where | Name |
 |---|---|---|
 | Alias | `files/config/mimetypealiases.json` | `image/vnd.dwg` → `application-dwg` |
-| Картинка | `files/core/img/filetypes/application-dwg.svg` | красная «A» + DWG |
-| Список для браузера | `files/core/js/mimetypelist.js` | только через `$OCC maintenance:mimetype:update-js` |
+| Image | `files/core/img/filetypes/application-dwg.svg` | red “A” + DWG |
+| Browser list | `files/core/js/mimetypelist.js` | only via `$OCC maintenance:mimetype:update-js` |
 
-Править `mimetypelist.js` руками не нужно — `update-js` пересоберёт. После обновления ядра Nextcloud каталог `files/core/` перезаписывается: иконки и JS снова серые, пока не выполнить `./scripts/set-cad.sh`.
+Do not edit `mimetypelist.js` by hand — `update-js` rebuilds it. After a Nextcloud core upgrade, `files/core/` is overwritten: icons and JS go grey again until you run `./scripts/set-cad.sh`.
 
-Исходники иконок в git: `apps/files_cad/img/filetypes/`.
+Icon sources in git: `apps/files_cad/img/filetypes/`.
 
-### Том в compose есть, а приложения в контейнере нет
+### Compose has the volume, the container does not have the app
 
-`docker compose.yml` поменяли, контейнер **не** пересоздавали — bind-mount старый. Симптом: `test -f .../custom_apps/files_cad/appinfo/info.xml` падает.
+`docker-compose.yml` changed, the container was **not** recreated — the bind-mount is old. Symptom: `test -f .../custom_apps/files_cad/appinfo/info.xml` fails.
 
 ```bash
 docker compose up -d nextcloud
 ```
 
-Не лечить копированием в `files/apps`.
+Do not “fix” it by copying into `files/apps`.
 
-На уже работающем стенде допустим запасной путь: положить копию в `files/custom_apps/files_cad` (это bind-mount `./files`). После следующего `compose up` с томом из `apps/files_cad` победит git-версия — так и должно быть.
+On an already running host a fallback is allowed: put a copy in `files/custom_apps/files_cad` (that is the `./files` bind-mount). After the next `compose up` with the `apps/files_cad` volume, the git version wins — that is intended.
 
-### `set-cad.sh` не запускали
+### `set-cad.sh` was not run
 
-Код в репозитории ≠ включённый просмотр. Пока нет `files_cad 1.0.x enabled` в `occ app:list` и нет строк MIME в filecache — будет сохранение файла. Так и было, пока на стенде вручную не выполнили `occ`.
+Code in the repository ≠ viewing enabled. Until `files_cad 1.0.x enabled` is in `occ app:list` and MIME rows exist in filecache, the UI will save the file. That is exactly what happened until `occ` was run by hand on the lab host.
 
-### File Viewer перехватывает Word / Excel
+### File Viewer intercepts Word / Excel
 
-`fileviewer` из коробки умеет 200+ форматов. Сразу после `app:install`:
+Out of the box `fileviewer` handles 200+ formats. Right after `app:install`:
 
 ```bash
 $OCC files_cad:configure-fileviewer
 ```
 
-Иначе docx откроется в File Viewer, а не в Collabora. Повторять после `$OCC app:update --all`.
+Otherwise a docx opens in File Viewer, not Collabora. Repeat after `$OCC app:update --all`.
 
-### Нет интернета на хосте
+### No internet on the host
 
-`occ app:install fileviewer` не скачает пакет. Тогда клик всё равно может открыть запасной экран `files_cad` (`/apps/files_cad/view`), но WebGL-просмотрщик не поставится. Для стройки лучше дать хосту доступ к App Store Nextcloud хотя бы на время установки.
+`occ app:install fileviewer` will not download the package. A click may still open the `files_cad` fallback (`/apps/files_cad/view`), but the WebGL viewer will not be installed. For a construction site, give the host App Store access at least for the install.
 
-### LibreDWG нет, а просмотр «должен» работать
+### LibreDWG is missing, but viewing “should” work
 
-`dwg2SVG` нужен только для миниатюр. Его отсутствие — не причина окна сохранения. Не блокировать деплой из-за пустого `command -v dwg2SVG`, если клик по DWG уже открывает чертёж.
+`dwg2SVG` is only for thumbnails. Its absence is not why the save dialog appears. Do not block the deploy because `command -v dwg2SVG` is empty if a DWG click already opens the drawing.
 
-Пакет вшивается в образ (`Dockerfile`). `apt install` внутри уже запущенного контейнера пропадёт при recreate — как с SMB.
+The package is baked into the image (`Dockerfile`). `apt install` inside an already running container disappears on recreate — same as SMB.
 
-### Шара SMB, файл «только для чтения»
+### SMB share, file is “read only”
 
-Просмотр не требует записи. MIME чинится в `filecache` так же, как для локальных файлов. `occ files_external:verify` для шары с логином пользователя по-прежнему не доказательство поломки.
+Viewing does not need write access. MIME is repaired in `filecache` the same way as for local files. `occ files_external:verify` on a share with user login is still not proof of a break.
 
-### После `occ upgrade` / `rebuild-image.sh`
+### After `occ upgrade` / `rebuild-image.sh`
 
-1. Контейнер новый — том `apps/files_cad` должен снова быть в `docker inspect` mounts.
-2. Ядро перезаписало `files/core/` — снова `./scripts/set-cad.sh`.
+1. New container — the `apps/files_cad` volume must show up again in `docker inspect` mounts.
+2. Core overwrote `files/core/` — run `./scripts/set-cad.sh` again.
 3. `$OCC files_cad:configure-fileviewer`.
 4. Ctrl+F5.
 
-### Плотный план этажа «тормозит» или выглядит кашей
+### A dense floor plan is “slow” or looks like a mess
 
-Это не ошибка деплоя. Строительный DWG с осями, лестницами и условными знаками в браузере на общем виде так и выглядит. Приблизить колесом, выключить слои, для согласования класть PDF. Подробности — раздел «Тяжёлые чертежи» ниже.
+This is not a deploy bug. A construction DWG with axes, stairs, and symbols looks like that in a browser at full view. Zoom with the wheel, turn layers off, put a PDF next to it for review. Details: “Heavy drawings” below.
 
 ---
 
-## Инварианты CAD (не нарушать)
+## CAD invariants (do not break)
 
-| Запрет | Почему |
+| Do not | Why |
 |---|---|
-| Не считать деплой CAD законченным после `git pull` без `set-cad.sh` | Приложения и filecache не обновятся |
-| Не править `mimetypemapping.dist.json` | Затрёт обновление Nextcloud |
-| Не класть `files_cad` в `files/apps` | Затрёт `occ upgrade` |
-| Не ждать иконку/просмотр без `update-db --repair-filecache` | Старые DWG остаются `octet-stream` |
-| Не ставить `fileviewer` и не вызывать `configure-fileviewer` | docx уйдёт из Collabora |
-| Не лечить LibreDWG через `apt` в живом контейнере | Пропадёт при recreate |
-| Не объявлять поломку просмотрщика, если план этажа «каша» на общем виде | Нормальный плотный DWG |
+| Do not treat CAD as done after `git pull` without `set-cad.sh` | Apps and filecache will not update |
+| Do not edit `mimetypemapping.dist.json` | A Nextcloud upgrade overwrites it |
+| Do not put `files_cad` in `files/apps` | `occ upgrade` overwrites it |
+| Do not wait for an icon/viewer without `update-db --repair-filecache` | Old DWG files stay `octet-stream` |
+| Do not install `fileviewer` and skip `configure-fileviewer` | docx leaves Collabora |
+| Do not “fix” LibreDWG with `apt` in a live container | It disappears on recreate |
+| Do not call the viewer broken if a floor plan looks messy at full view | Normal dense DWG |
 
 ---
 
-## Тяжёлые чертежи
+## Heavy drawings
 
-Строительный план этажа — обычный плотный DWG, не битый файл. Браузерный просмотрщик не заменяет AutoCAD.
+A construction floor plan is a normal dense DWG, not a corrupt file. The browser viewer does not replace AutoCAD.
 
-Уже достаточно для облака: открыть, показать подрядчику, скачать для правок.
+Already enough for the cloud: open, show a contractor, download for edits.
 
-Не ждите: редактирование DWG, идеальные штриховки/размеры, зум как в десктопе на генплане с xref.
+Do not expect: DWG editing, perfect hatches/dimensions, desktop-class zoom on a site plan with xrefs.
 
-Как работать быстрее:
+Work faster:
 
-1. Приближать колесом.
-2. Выключать слои мебели, аннотаций, сетки.
-3. На согласование — PDF с листа рядом с DWG.
-4. Авторам: `PURGE`, без лишних xref, `PROXYGRAPHICS=1` при сохранении.
+1. Zoom with the wheel.
+2. Turn off furniture, annotation, and grid layers.
+3. For review — a sheet PDF next to the DWG.
+4. For authors: `PURGE`, no extra xrefs, `PROXYGRAPHICS=1` on save.
 
-Лимиты запасного SVG-конвертера (если нет fileviewer): превью 16 МиБ, просмотр 64 МиБ, контейнер Nextcloud 1 GiB. File Viewer считает чертёж в браузере и сервер почти не грузит.
+Fallback SVG converter limits (if fileviewer is missing): preview 16 MiB, view 64 MiB, Nextcloud container 1 GiB. File Viewer renders in the browser and barely loads the server.
 
 ---
 
-## Команды на уже живом инстансе
+## Commands on a live instance
 
-Повторить настройку (безопасно, идемпотентно):
+Repeat setup (safe, idempotent):
 
 ```bash
 ./scripts/set-cad.sh
 ```
 
-Только не дать fileviewer забрать офис:
+Only keep fileviewer off office files:
 
 ```bash
 docker exec -u 33 "$DOCKER_CONTAINER_NAME" php occ files_cad:configure-fileviewer

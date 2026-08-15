@@ -1,28 +1,28 @@
 # LDAP / Active Directory
 
-## Применение
+## Apply
 
-Заполните в `.env` блок `LDAP_*`, затем:
+Fill the `LDAP_*` block in `.env`, then:
 
 ```bash
 ./scripts/set-ldap.sh
 ```
 
-Проверка без изменения настроек:
+Check without writing settings:
 
 ```bash
 ./scripts/test-ldap.sh
 ```
 
-Фильтр входа по умолчанию:
+Default login filter:
 
 ```
 (&(objectClass=person)(uid=%uid))
 ```
 
-При необходимости поправьте его через `occ ldap:set-config` или в админке Nextcloud.
+Change it with `occ ldap:set-config` or in the Nextcloud admin UI if needed.
 
-## Полезные команды
+## Useful commands
 
 ```bash
 docker exec -u 33 "$DOCKER_CONTAINER_NAME" php occ ldap:show-config
@@ -30,4 +30,4 @@ docker exec -u 33 "$DOCKER_CONTAINER_NAME" php occ ldap:test-config s01
 docker exec -u 33 "$DOCKER_CONTAINER_NAME" php occ user:report
 ```
 
-Контейнер должен резолвить контроллер домена (`LDAP_HOST`) из `docker-lan` или через DNS хоста.
+The container must resolve the domain controller (`LDAP_HOST`) via `docker-lan` or the host DNS.
